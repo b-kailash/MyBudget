@@ -21,7 +21,9 @@ async function main(): Promise<void> {
       console.log('='.repeat(50));
       console.log(`Environment: ${config.server.env}`);
       console.log(`Port: ${config.server.port}`);
-      console.log(`Health check: http://localhost:${config.server.port}/health`);
+      console.log(
+        `Health check: http://localhost:${config.server.port}/health`
+      );
       console.log('='.repeat(50));
     });
 

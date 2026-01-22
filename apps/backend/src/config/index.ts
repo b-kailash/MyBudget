@@ -60,24 +60,36 @@ export const config = {
  */
 export function validateConfig(): void {
   // Validate port is a valid number
-  if (isNaN(config.server.port) || config.server.port < 1 || config.server.port > 65535) {
-    throw new Error(`Invalid PORT: ${process.env.PORT}. Must be a number between 1 and 65535.`);
+  if (
+    isNaN(config.server.port) ||
+    config.server.port < 1 ||
+    config.server.port > 65535
+  ) {
+    throw new Error(
+      `Invalid PORT: ${process.env.PORT}. Must be a number between 1 and 65535.`
+    );
   }
 
   // Validate NODE_ENV
   const validEnvs = ['development', 'production', 'test'];
   if (!validEnvs.includes(config.server.env)) {
-    throw new Error(`Invalid NODE_ENV: ${config.server.env}. Must be one of: ${validEnvs.join(', ')}`);
+    throw new Error(
+      `Invalid NODE_ENV: ${config.server.env}. Must be one of: ${validEnvs.join(', ')}`
+    );
   }
 
   // Validate DATABASE_URL format
   if (!config.database.url.startsWith('postgresql://')) {
-    throw new Error('DATABASE_URL must be a valid PostgreSQL connection string');
+    throw new Error(
+      'DATABASE_URL must be a valid PostgreSQL connection string'
+    );
   }
 
   // Validate JWT secret length (should be reasonably secure)
   if (config.jwt.secret.length < 32) {
-    console.warn('WARNING: JWT_SECRET should be at least 32 characters for security');
+    console.warn(
+      'WARNING: JWT_SECRET should be at least 32 characters for security'
+    );
   }
 
   console.log('Configuration validated successfully');
