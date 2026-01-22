@@ -1,0 +1,14 @@
+{
+  "name": "@mybudget/web",
+  "version": "0.0.1",
+  "private": true,
+  "description": "MyBudget web frontend - React SPA",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
