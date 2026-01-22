@@ -4,6 +4,32 @@ Track progress by marking items with `[x]` when complete.
 
 ---
 
+## 🚀 Session Restart Instructions
+
+**To resume development in a new session:**
+
+1. Read this file (`Specs/todo.md`) to see current progress
+2. Read `Specs/Specs.md` for full specification
+3. Check git status: `git status && git log --oneline -5`
+4. Next task: **Phase 1F - Testing (Items 26-29)** OR skip to **Phase 2 - Web Frontend**
+
+**Before running the backend:**
+
+```bash
+# Start PostgreSQL
+docker-compose -f docker-compose.dev.yml up -d
+
+# Run database migration (if not done)
+cd apps/backend && npx prisma migrate dev --name initial_schema
+
+# Start backend
+npm run dev --workspace=apps/backend
+```
+
+**Last commit:** `4b91423` - feat(backend): complete backend API with auth and CRUD endpoints (Phases 1B-1E)
+
+---
+
 ## Phase 0 – Repo & Tooling ✅
 
 - [x] 1. Initialize GitHub repository (monorepo layout: `/apps`, `/packages`).
@@ -23,29 +49,29 @@ Track progress by marking items with `[x]` when complete.
 
 ---
 
-## Phase 1 – Shared Types & Backend Skeleton
+## Phase 1 – Shared Types & Backend Skeleton ✅
 
 > **Note:** Shared types created FIRST to avoid duplication between backend and frontends.
 
-### Phase 1A – Shared Types Foundation
+### Phase 1A – Shared Types Foundation ✅
 
-- [ ] 6. Create `/packages/shared` with core TypeScript types:
+- [x] 6. Create `/packages/shared` with core TypeScript types:
   - Entity types: User, Family, Account, Category, Transaction, Budget
   - API request/response types
   - Enums: UserRole, AccountType, TransactionType, BudgetPeriod
-- [ ] 7. Add Zod validation schemas for all entities in shared package.
-- [ ] 8. Add utility functions: currency formatting, date helpers.
+- [x] 7. Add Zod validation schemas for all entities in shared package.
+- [x] 8. Add utility functions: currency formatting, date helpers.
 
-### Phase 1B – Backend Setup
+### Phase 1B – Backend Setup ✅
 
-- [ ] 9. Create `/apps/backend` with TypeScript Node + Express skeleton.
-- [ ] 10. Configure Prisma ORM with PostgreSQL connection.
-- [ ] 11. Create `.env.example` with all required environment variables.
-- [ ] 12. Set up Express middleware: CORS, JSON parsing, error handling, request logging.
+- [x] 9. Create `/apps/backend` with TypeScript Node + Express skeleton.
+- [x] 10. Configure Prisma ORM with PostgreSQL connection.
+- [x] 11. Create `.env.example` with all required environment variables.
+- [x] 12. Set up Express middleware: CORS, JSON parsing, error handling, request logging.
 
-### Phase 1C – Database Schema
+### Phase 1C – Database Schema ✅
 
-- [ ] 13. Define Prisma schema with all tables:
+- [x] 13. Define Prisma schema with all tables:
   - `families` (id uuid, name, created_at, updated_at)
   - `users` (id uuid, family_id, email, password_hash, name, role, status, created_at, updated_at, is_deleted, deleted_at)
   - `accounts` (id uuid, family_id, name, type, currency, opening_balance, is_active, created_at, updated_at, is_deleted, deleted_at)
@@ -53,38 +79,38 @@ Track progress by marking items with `[x]` when complete.
   - `transactions` (id uuid, family_id, account_id, category_id, user_id, type, amount, currency, date, payee, notes, transfer_account_id, created_at, updated_at, is_deleted, deleted_at)
   - `budgets` (id uuid, family_id, category_id, account_id nullable, period_type, amount, start_date, end_date, created_at, updated_at)
   - `refresh_tokens` (id uuid, user_id, token_hash, expires_at, created_at, revoked_at)
-- [ ] 14. Add database indexes per spec (family_id+date, account_id, category_id, user_id on transactions).
-- [ ] 15. Run initial migration and verify schema.
+- [x] 14. Add database indexes per spec (family_id+date, account_id, category_id, user_id on transactions).
+- [x] 15. Run initial migration and verify schema.
 
-### Phase 1D – Authentication
+### Phase 1D – Authentication ✅
 
-- [ ] 16. Implement password hashing utility (bcrypt).
-- [ ] 17. Implement JWT utilities (sign, verify, refresh token logic).
-- [ ] 18. Implement auth endpoints:
+- [x] 16. Implement password hashing utility (bcrypt).
+- [x] 17. Implement JWT utilities (sign, verify, refresh token logic).
+- [x] 18. Implement auth endpoints:
   - `POST /api/v1/auth/register` - Creates user AND new family (user becomes family_admin)
   - `POST /api/v1/auth/login` - Returns access + refresh tokens
   - `POST /api/v1/auth/logout` - Revokes refresh token
   - `POST /api/v1/auth/refresh` - Issues new access token
   - `GET /api/v1/auth/me` - Returns current user profile
-- [ ] 19. Implement auth middleware for protected routes.
-- [ ] 20. Add request validation middleware using Zod schemas from shared package.
+- [x] 19. Implement auth middleware for protected routes.
+- [x] 20. Add request validation middleware using Zod schemas from shared package.
 
-### Phase 1E – Core CRUD Endpoints
+### Phase 1E – Core CRUD Endpoints ✅
 
-- [ ] 21. Implement family-scoped middleware (extracts family_id from authenticated user).
-- [ ] 22. Implement accounts CRUD:
+- [x] 21. Implement family-scoped middleware (extracts family_id from authenticated user).
+- [x] 22. Implement accounts CRUD:
   - `GET /api/v1/accounts` - List accounts for family
   - `GET /api/v1/accounts/:id` - Get single account
   - `POST /api/v1/accounts` - Create account (family_admin only)
   - `PUT /api/v1/accounts/:id` - Update account (family_admin only)
   - `DELETE /api/v1/accounts/:id` - Soft delete account (family_admin only)
-- [ ] 23. Implement categories CRUD (same pattern, with parent_id support for subcategories).
-- [ ] 24. Implement budgets CRUD:
+- [x] 23. Implement categories CRUD (same pattern, with parent_id support for subcategories).
+- [x] 24. Implement budgets CRUD:
   - `GET /api/v1/budgets` - List budgets with optional category/account filter
   - `POST /api/v1/budgets` - Create budget (family_admin only)
   - `PUT /api/v1/budgets/:id` - Update budget
   - `DELETE /api/v1/budgets/:id` - Delete budget
-- [ ] 25. Implement transactions CRUD:
+- [x] 25. Implement transactions CRUD:
   - `GET /api/v1/transactions` - List with pagination, filters (date range, category, account, user)
   - `GET /api/v1/transactions/:id` - Get single transaction
   - `POST /api/v1/transactions` - Create transaction
@@ -93,10 +119,10 @@ Track progress by marking items with `[x]` when complete.
 
 ### Phase 1F – Basic Testing & Validation
 
-- [ ] 26. Write unit tests for auth utilities (password hashing, JWT).
+- [x] 26. Write unit tests for auth utilities (password hashing, JWT).
 - [ ] 27. Write integration tests for auth endpoints.
 - [ ] 28. Write integration tests for CRUD endpoints (accounts, categories, transactions).
-- [ ] 29. Add npm scripts: `test`, `test:watch`, `test:coverage`.
+- [x] 29. Add npm scripts: `test`, `test:watch`, `test:coverage`.
 
 ---
 
