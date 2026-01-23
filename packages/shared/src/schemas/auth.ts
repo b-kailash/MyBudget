@@ -35,3 +35,31 @@ export const refreshTokenSchema = z.object({
   /** Refresh token */
   refreshToken: z.string().min(1, 'Refresh token is required'),
 });
+
+/**
+ * Forgot password request validation schema
+ */
+export const forgotPasswordSchema = z.object({
+  /** User email address */
+  email: emailSchema,
+});
+
+/**
+ * Password reset validation schema
+ */
+export const resetPasswordSchema = z.object({
+  /** Password reset token */
+  token: z.string().min(1, 'Reset token is required'),
+  /** New password */
+  password: passwordSchema,
+});
+
+/**
+ * Change password validation schema (for authenticated users)
+ */
+export const changePasswordSchema = z.object({
+  /** Current password */
+  currentPassword: z.string().min(1, 'Current password is required'),
+  /** New password */
+  newPassword: passwordSchema,
+});

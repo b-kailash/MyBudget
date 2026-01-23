@@ -9,3 +9,8 @@ export { requestLogger } from './requestLogger.js';
 export { notFoundHandler } from './notFound.js';
 export { authenticate, requireRole } from './auth.js';
 export { validate } from './validate.js';
+export {
+  authRateLimiter,
+  apiRateLimiter,
+  passwordResetRateLimiter,
+} from './rateLimit.js';

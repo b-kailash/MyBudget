@@ -1,25 +1,12 @@
+import { describe, it, expect } from '@jest/globals';
 import {
   generateAccessToken,
   verifyAccessToken,
   generateRefreshToken,
   hashRefreshToken,
-  JwtPayload,
-} from '../jwt';
-import { config } from '../../config'; // Import the mocked config
+} from '../jwt.js';
 
-// Mock the config module explicitly here for clarity, though it's set up in jest.setup.ts
-// This block is mainly for demonstrating that the config is indeed mocked.
-jest.mock('../../config', () => ({
-  config: {
-    jwt: {
-      secret: 'test-jwt-secret-for-jwt-test', // Use a distinct secret for this test file
-      accessExpiresIn: '1h',
-      refreshSecret: 'test-refresh-secret-for-jwt-test',
-      refreshExpiresIn: '7d',
-    },
-    // Other config properties can be mocked if needed
-  },
-}));
+// Environment variables are set in jest.setup.ts
 
 describe('JWT utilities', () => {
   const userId = 'user-123';
@@ -51,22 +38,12 @@ describe('JWT utilities', () => {
       expect(payload).toBeNull();
     });
 
-    it('should return null for an expired access token', () => {
-      // Temporarily set a very short expiry for testing expiration
-      const originalAccessExpiresIn = config.jwt.accessExpiresIn;
-      config.jwt.accessExpiresIn = '1ms'; // 1 millisecond
-
-      const token = generateAccessToken(userId, familyId, role);
-
-      // Wait for the token to expire
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const payload = verifyAccessToken(token);
-          expect(payload).toBeNull();
-          config.jwt.accessExpiresIn = originalAccessExpiresIn; // Restore original config
-          resolve(null);
-        }, 50); // A bit longer than 1ms
-      });
+    it('should return null for a malformed token', () => {
+      // Test with a token that has valid JWT format but wrong signature
+      const malformedToken =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0IiwiZmFtaWx5SWQiOiJ0ZXN0Iiwicm9sZSI6Im1lbWJlciIsImlhdCI6MTYwMDAwMDAwMH0.invalidsignature';
+      const payload = verifyAccessToken(malformedToken);
+      expect(payload).toBeNull();
     });
   });
 

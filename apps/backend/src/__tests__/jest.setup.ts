@@ -1,25 +1,12 @@
 // apps/backend/src/__tests__/jest.setup.ts
+// Global test setup file
 
-// Mock the config module for JWT tests, as it relies on process.env
-// This ensures tests are isolated from the actual environment variables
-// and can use consistent, test-specific values.
-jest.mock('../config', () => ({
-  config: {
-    jwt: {
-      secret: 'test-jwt-secret',
-      accessExpiresIn: '15m',
-      refreshSecret: 'test-refresh-secret',
-      refreshExpiresIn: '7d',
-    },
-    server: {
-      port: 3000,
-      env: 'test',
-    },
-    database: {
-      url: 'postgresql://test:test@localhost:5432/testdb',
-    },
-    cors: {
-      origin: '*',
-    },
-  },
-}));
+// Set test environment variables before config module is loaded
+process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_ACCESS_EXPIRES_IN = '15m';
+process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
+process.env.JWT_REFRESH_EXPIRES_IN = '7d';
+process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/testdb';
+process.env.PORT = '3000';
+process.env.CORS_ORIGIN = '*';

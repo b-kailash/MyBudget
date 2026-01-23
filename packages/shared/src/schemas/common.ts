@@ -15,12 +15,19 @@ export const emailSchema = z
 
 /**
  * Password validation schema
- * Requires at least 8 characters
+ * Requirements:
+ * - At least 8 characters
+ * - At least one uppercase letter
+ * - At least one lowercase letter
+ * - At least one number
  */
 export const passwordSchema = z
   .string()
   .min(8, 'Password must be at least 8 characters')
-  .max(100, 'Password must not exceed 100 characters');
+  .max(100, 'Password must not exceed 100 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+  .regex(/[0-9]/, 'Password must contain at least one number');
 
 /**
  * Currency code validation schema (ISO 4217)

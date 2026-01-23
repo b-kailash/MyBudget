@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import crypto from 'crypto';
 import {
   ApiResponse,
   LoginResponse,
@@ -7,10 +8,16 @@ import {
   registerSchema,
   loginSchema,
   refreshTokenSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from '@mybudget/shared';
 import { prisma } from '../lib/prisma.js';
 import { validate } from '../middleware/validate.js';
 import { authenticate } from '../middleware/auth.js';
+import {
+  authRateLimiter,
+  passwordResetRateLimiter,
+} from '../middleware/rateLimit.js';
 import {
   hashPassword,
   verifyPassword,
@@ -18,6 +25,11 @@ import {
   generateRefreshToken,
   hashRefreshToken,
 } from '../utils/index.js';
+
+// Account lockout configuration
+const LOCKOUT_THRESHOLD = 5; // Number of failed attempts before lockout
+const LOCKOUT_DURATION_MINUTES = 15; // Lockout duration in minutes
+const FAILED_ATTEMPT_WINDOW_MINUTES = 15; // Window to count failed attempts
 
 const router = Router();
 
@@ -27,6 +39,7 @@ const router = Router();
  */
 router.post(
   '/register',
+  authRateLimiter,
   validate(registerSchema),
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -131,15 +144,101 @@ router.post(
 );
 
 /**
+ * Helper function to get client IP address
+ */
+function getClientIp(req: Request): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.ip || req.socket.remoteAddress || 'unknown';
+}
+
+/**
+ * Helper function to record login attempt
+ */
+async function recordLoginAttempt(
+  email: string,
+  ipAddress: string,
+  success: boolean
+): Promise<void> {
+  await prisma.loginAttempt.create({
+    data: {
+      email,
+      ipAddress,
+      success,
+    },
+  });
+}
+
+/**
+ * Helper function to check if account is locked
+ */
+async function isAccountLocked(email: string): Promise<boolean> {
+  const windowStart = new Date();
+  windowStart.setMinutes(
+    windowStart.getMinutes() - FAILED_ATTEMPT_WINDOW_MINUTES
+  );
+
+  const failedAttempts = await prisma.loginAttempt.count({
+    where: {
+      email,
+      success: false,
+      createdAt: { gte: windowStart },
+    },
+  });
+
+  return failedAttempts >= LOCKOUT_THRESHOLD;
+}
+
+/**
+ * Helper function to get lockout remaining time
+ */
+async function getLockoutRemainingMinutes(email: string): Promise<number> {
+  const lastFailedAttempt = await prisma.loginAttempt.findFirst({
+    where: {
+      email,
+      success: false,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!lastFailedAttempt) return 0;
+
+  const lockoutEnds = new Date(lastFailedAttempt.createdAt);
+  lockoutEnds.setMinutes(lockoutEnds.getMinutes() + LOCKOUT_DURATION_MINUTES);
+
+  const remainingMs = lockoutEnds.getTime() - Date.now();
+  return Math.max(0, Math.ceil(remainingMs / 60000));
+}
+
+/**
  * POST /api/v1/auth/login
  * Login with email and password
  */
 router.post(
   '/login',
+  authRateLimiter,
   validate(loginSchema),
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { email, password } = req.body;
+      const ipAddress = getClientIp(req);
+
+      // Check if account is locked due to too many failed attempts
+      const locked = await isAccountLocked(email);
+      if (locked) {
+        const remainingMinutes = await getLockoutRemainingMinutes(email);
+        const response: ApiResponse<null> = {
+          data: null,
+          error: {
+            code: 'ACCOUNT_LOCKED',
+            message: `Account temporarily locked due to too many failed login attempts. Try again in ${remainingMinutes} minutes.`,
+          },
+        };
+        res.status(429).json(response);
+        return;
+      }
 
       // Find user by email
       const user = await prisma.user.findUnique({
@@ -147,6 +246,8 @@ router.post(
       });
 
       if (!user) {
+        // Record failed attempt even for non-existent user (prevents user enumeration timing attacks)
+        await recordLoginAttempt(email, ipAddress, false);
         const response: ApiResponse<null> = {
           data: null,
           error: {
@@ -175,6 +276,8 @@ router.post(
       const isPasswordValid = await verifyPassword(password, user.passwordHash);
 
       if (!isPasswordValid) {
+        // Record failed attempt
+        await recordLoginAttempt(email, ipAddress, false);
         const response: ApiResponse<null> = {
           data: null,
           error: {
@@ -185,6 +288,9 @@ router.post(
         res.status(401).json(response);
         return;
       }
+
+      // Record successful attempt (resets the lockout window)
+      await recordLoginAttempt(email, ipAddress, true);
 
       // Generate tokens
       const accessToken = generateAccessToken(
@@ -307,6 +413,7 @@ router.post(
  */
 router.post(
   '/refresh',
+  authRateLimiter,
   validate(refreshTokenSchema),
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -482,6 +589,191 @@ router.get(
         error: {
           code: 'INTERNAL_ERROR',
           message: 'An error occurred while fetching user profile',
+        },
+      };
+      res.status(500).json(response);
+    }
+  }
+);
+
+/**
+ * POST /api/v1/auth/forgot-password
+ * Request a password reset token
+ */
+router.post(
+  '/forgot-password',
+  passwordResetRateLimiter,
+  validate(forgotPasswordSchema),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email } = req.body;
+
+      // Find user by email
+      const user = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      // Always return success to prevent email enumeration attacks
+      const successResponse: ApiResponse<{ message: string }> = {
+        data: {
+          message:
+            'If an account with that email exists, a password reset link has been sent.',
+        },
+        error: null,
+      };
+
+      if (!user || user.isDeleted || user.status === 'DISABLED') {
+        // Return success even if user doesn't exist (security measure)
+        res.status(200).json(successResponse);
+        return;
+      }
+
+      // Generate a secure reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+
+      // Token expires in 1 hour
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1);
+
+      // Invalidate any existing reset tokens for this user
+      await prisma.passwordResetToken.updateMany({
+        where: {
+          userId: user.id,
+          usedAt: null,
+        },
+        data: {
+          usedAt: new Date(), // Mark as used to invalidate
+        },
+      });
+
+      // Create new reset token
+      await prisma.passwordResetToken.create({
+        data: {
+          userId: user.id,
+          tokenHash,
+          expiresAt,
+        },
+      });
+
+      // TODO: Send email with reset link containing resetToken
+      // For now, log the token (in production, this would be sent via email)
+      console.log(
+        `Password reset token for ${email}: ${resetToken} (expires: ${expiresAt.toISOString()})`
+      );
+
+      res.status(200).json(successResponse);
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      const response: ApiResponse<null> = {
+        data: null,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'An error occurred while processing your request',
+        },
+      };
+      res.status(500).json(response);
+    }
+  }
+);
+
+/**
+ * POST /api/v1/auth/reset-password
+ * Reset password using reset token
+ */
+router.post(
+  '/reset-password',
+  passwordResetRateLimiter,
+  validate(resetPasswordSchema),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { token, password } = req.body;
+
+      // Hash the provided token to compare with stored hash
+      const tokenHash = crypto
+        .createHash('sha256')
+        .update(token)
+        .digest('hex');
+
+      // Find the reset token
+      const resetToken = await prisma.passwordResetToken.findFirst({
+        where: {
+          tokenHash,
+          usedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        include: { user: true },
+      });
+
+      if (!resetToken) {
+        const response: ApiResponse<null> = {
+          data: null,
+          error: {
+            code: 'INVALID_TOKEN',
+            message: 'Invalid or expired reset token',
+          },
+        };
+        res.status(400).json(response);
+        return;
+      }
+
+      // Check if user account is still valid
+      if (resetToken.user.isDeleted || resetToken.user.status === 'DISABLED') {
+        const response: ApiResponse<null> = {
+          data: null,
+          error: {
+            code: 'ACCOUNT_DISABLED',
+            message: 'This account has been disabled',
+          },
+        };
+        res.status(403).json(response);
+        return;
+      }
+
+      // Hash the new password
+      const passwordHash = await hashPassword(password);
+
+      // Update password and invalidate all tokens in a transaction
+      await prisma.$transaction([
+        // Update user password
+        prisma.user.update({
+          where: { id: resetToken.userId },
+          data: { passwordHash },
+        }),
+        // Mark reset token as used
+        prisma.passwordResetToken.update({
+          where: { id: resetToken.id },
+          data: { usedAt: new Date() },
+        }),
+        // Revoke all refresh tokens (security measure - force re-login)
+        prisma.refreshToken.updateMany({
+          where: {
+            userId: resetToken.userId,
+            revokedAt: null,
+          },
+          data: { revokedAt: new Date() },
+        }),
+      ]);
+
+      const response: ApiResponse<{ message: string }> = {
+        data: {
+          message:
+            'Password has been reset successfully. Please login with your new password.',
+        },
+        error: null,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      console.error('Reset password error:', error);
+      const response: ApiResponse<null> = {
+        data: null,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'An error occurred while resetting your password',
         },
       };
       res.status(500).json(response);
