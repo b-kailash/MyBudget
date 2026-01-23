@@ -309,10 +309,12 @@ if [ -n "$ACCOUNT_ID" ] && [ "$ACCOUNT_ID" != "null" ] && [ -n "$CATEGORY_ID" ] 
         -d "{
             \"accountId\": \"$ACCOUNT_ID\",
             \"categoryId\": \"$CATEGORY_ID\",
-            \"amount\": -50.00,
+            \"amount\": 50.00,
             \"type\": \"EXPENSE\",
+            \"currency\": \"USD\",
+            \"payee\": \"Test Grocery Store\",
             \"description\": \"Test grocery purchase\",
-            \"date\": \"$(date +%Y-%m-%d)\"
+            \"date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
         }")
 
     TRANSACTION_ID=$(echo "$CREATE_TRANSACTION_RESPONSE" | jq -r '.data.id // empty')
