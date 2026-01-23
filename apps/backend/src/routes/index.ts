@@ -14,6 +14,24 @@ const router = Router();
  * Mounts all route modules
  */
 
+// Root endpoint - API information
+router.get('/', (_req, res) => {
+  res.json({
+    name: 'MyBudget API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/health',
+      auth: '/api/v1/auth',
+      accounts: '/api/v1/accounts',
+      categories: '/api/v1/categories',
+      budgets: '/api/v1/budgets',
+      transactions: '/api/v1/transactions',
+    },
+    documentation: 'See /health for server status',
+  });
+});
+
 // Health check endpoint (no /api prefix needed, no rate limiting)
 router.use('/health', healthRouter);
 

@@ -60,6 +60,7 @@ model Family {
   categories   Category[]
   transactions Transaction[]
   budgets      Budget[]
+  invitations  FamilyInvitation[]
 
   @@map("families")
 }
@@ -82,6 +83,7 @@ model User {
   transactions        Transaction[]
   refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
+  sentInvitations     FamilyInvitation[]   @relation("InvitedBy")
 
   @@index([email])
   @@map("users")
@@ -225,4 +227,31 @@ model PasswordResetToken {
 
   @@index([tokenHash])
   @@map("password_reset_tokens")
+}
+
+enum InviteRole {
+  MEMBER
+  VIEWER
+}
+
+model FamilyInvitation {
+  id              String      @id @default(uuid())
+  familyId        String      @map("family_id")
+  invitedByUserId String      @map("invited_by_user_id")
+  email           String
+  role            InviteRole
+  tokenHash       String      @map("token_hash")
+  expiresAt       DateTime    @map("expires_at")
+  acceptedAt      DateTime?   @map("accepted_at")
+  revokedAt       DateTime?   @map("revoked_at")
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  // Relations
+  family    Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  invitedBy User   @relation("InvitedBy", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([tokenHash])
+  @@index([familyId])
+  @@map("family_invitations")
 }

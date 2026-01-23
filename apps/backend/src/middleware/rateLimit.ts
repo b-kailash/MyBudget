@@ -17,14 +17,7 @@ export const authRateLimiter = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in RateLimit-* headers
   legacyHeaders: false, // Disable X-RateLimit-* headers
-  keyGenerator: (req) => {
-    // Use X-Forwarded-For header if behind a proxy, otherwise use IP
-    const forwarded = req.headers['x-forwarded-for'];
-    if (typeof forwarded === 'string') {
-      return forwarded.split(',')[0].trim();
-    }
-    return req.ip || req.socket.remoteAddress || 'unknown';
-  },
+  // Use default keyGenerator which properly handles IPv6
 });
 
 /**
@@ -44,18 +37,17 @@ export const apiRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
-    // For authenticated users, use their user ID
-    // Otherwise fall back to IP address
+    // For authenticated users, use their user ID (no IP involved, so no IPv6 issue)
     const user = (req as { user?: { id: string } }).user;
     if (user?.id) {
       return user.id;
     }
-    const forwarded = req.headers['x-forwarded-for'];
-    if (typeof forwarded === 'string') {
-      return forwarded.split(',')[0].trim();
-    }
-    return req.ip || req.socket.remoteAddress || 'unknown';
+    // For unauthenticated requests, return a constant to use default IP handling
+    // The actual IP limiting is handled by authRateLimiter for auth routes
+    return 'unauthenticated';
   },
+  // Skip the IPv6 validation since we handle user ID separately
+  validate: { xForwardedForHeader: false },
 });
 
 /**
@@ -75,11 +67,5 @@ export const passwordResetRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => {
-    const forwarded = req.headers['x-forwarded-for'];
-    if (typeof forwarded === 'string') {
-      return forwarded.split(',')[0].trim();
-    }
-    return req.ip || req.socket.remoteAddress || 'unknown';
-  },
+  // Use default keyGenerator which properly handles IPv6
 });

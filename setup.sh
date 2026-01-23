@@ -20,8 +20,17 @@ if [ $? -ne 0 ]; then
 fi
 echo "✅ Node.js dependencies installed."
 
-# --- 3. Set Up Environment Variables ---
-echo "📝 Setting up environment variables..."
+# --- 3. Build Shared Package ---
+echo "🔨 Building shared package (@mybudget/shared)..."
+npm run build --workspace=packages/shared
+if [ $? -ne 0 ]; then
+    echo "❌ Failed to build shared package. Please check the output above for errors."
+    exit 1
+fi
+echo "✅ Shared package built successfully."
+
+# --- 4. Set Up Environment Variables ---
+echo "📝 Setting up backend environment variables..."
 BACKEND_DIR="apps/backend"
 ENV_FILE="$BACKEND_DIR/.env"
 ENV_EXAMPLE_FILE="$BACKEND_DIR/.env.example"
@@ -48,7 +57,7 @@ else
 fi
 echo "✅ Environment variables set (please confirm you've updated secrets in .env)."
 
-# --- 4. Start PostgreSQL Database ---
+# --- 5. Start PostgreSQL Database ---
 echo "🐳 Starting PostgreSQL database via Docker Compose..."
 docker-compose -f docker-compose.dev.yml up -d
 if [ $? -ne 0 ]; then
@@ -59,7 +68,7 @@ echo "Waiting a few seconds for the database to become ready..."
 sleep 5 # Give the database a moment to fully start
 echo "✅ PostgreSQL database is running."
 
-# --- 5. Run Database Migrations ---
+# --- 6. Run Database Migrations ---
 echo "📊 Running Prisma database migrations..."
 npm run prisma:migrate --workspace=apps/backend
 if [ $? -ne 0 ]; then

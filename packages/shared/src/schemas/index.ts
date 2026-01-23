@@ -10,3 +10,6 @@ export * from './auth';
 
 // Re-export entity schemas
 export * from './entities';
+
+// Re-export family schemas
+export * from './family';
