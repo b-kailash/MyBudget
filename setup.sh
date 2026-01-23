@@ -5,11 +5,21 @@
 echo "🚀 Starting MyBudget Backend Setup..."
 
 # --- 1. Check for Prerequisites ---
-echo "⚙️ Checking for prerequisites (npm, docker, docker-compose)..."
+echo "⚙️ Checking for prerequisites (npm, docker)..."
 command -v npm >/dev/null 2>&1 || { echo >&2 "npm is not installed. Please install Node.js and npm."; exit 1; }
 command -v docker >/dev/null 2>&1 || { echo >&2 "Docker is not installed. Please install Docker Desktop."; exit 1; }
-command -v docker-compose >/dev/null 2>&1 || { echo >&2 "Docker Compose is not installed. Please install Docker Desktop."; exit 1; }
-echo "✅ Prerequisites met."
+
+# Detect Docker Compose command (v2: "docker compose" vs v1: "docker-compose")
+if docker compose version >/dev/null 2>&1; then
+    DOCKER_COMPOSE="docker compose"
+    echo "✅ Prerequisites met (using Docker Compose v2)."
+elif command -v docker-compose >/dev/null 2>&1; then
+    DOCKER_COMPOSE="docker-compose"
+    echo "✅ Prerequisites met (using Docker Compose v1)."
+else
+    echo >&2 "Docker Compose is not installed. Please install Docker Desktop."
+    exit 1
+fi
 
 # --- 2. Install Node.js Dependencies ---
 echo "📦 Installing Node.js dependencies (this may take a moment)..."
@@ -59,7 +69,7 @@ echo "✅ Environment variables set (please confirm you've updated secrets in .e
 
 # --- 5. Start PostgreSQL Database ---
 echo "🐳 Starting PostgreSQL database via Docker Compose..."
-docker-compose -f docker-compose.dev.yml up -d
+$DOCKER_COMPOSE -f docker-compose.dev.yml up -d
 if [ $? -ne 0 ]; then
     echo "❌ Docker Compose failed to start the database. Please check your Docker installation and permissions."
     exit 1

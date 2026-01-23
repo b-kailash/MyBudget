@@ -16,7 +16,10 @@ Before you begin, ensure your system meets the following requirements:
     *   Verify installation: `node --version` and `npm --version`
 *   **Docker & Docker Compose**: For running the PostgreSQL database.
     *   [Download Docker Desktop](https://www.docker.com/products/docker-desktop) (includes Docker Compose)
-    *   Verify installation: `docker --version` and `docker-compose --version`
+    *   Verify installation: `docker --version`
+    *   For Docker Compose, use either:
+        *   **v2 (recommended):** `docker compose version`
+        *   **v1 (legacy):** `docker-compose --version`
 
 ## Quick Setup with `setup.sh` (Recommended)
 
@@ -105,8 +108,14 @@ The backend requires specific environment variables for configuration, such as d
 
 The project uses a Docker Compose file (`docker-compose.dev.yml`) to quickly spin up a PostgreSQL database instance for development.
 
+> **Note:** Use `docker compose` (v2) or `docker-compose` (v1) depending on your installation. The examples below show both formats.
+
 1.  **Start the database container:**
     ```bash
+    # Docker Compose v2 (recommended)
+    docker compose -f docker-compose.dev.yml up -d
+
+    # Docker Compose v1 (legacy)
     docker-compose -f docker-compose.dev.yml up -d
     ```
 
@@ -119,6 +128,10 @@ The project uses a Docker Compose file (`docker-compose.dev.yml`) to quickly spi
 3.  **Wait for the database to be ready:**
     The database needs a few seconds to initialize. You can check the logs:
     ```bash
+    # Docker Compose v2
+    docker compose -f docker-compose.dev.yml logs -f
+
+    # Docker Compose v1
     docker-compose -f docker-compose.dev.yml logs -f
     ```
     Press `Ctrl+C` to exit the logs once you see the database is ready.
@@ -217,7 +230,9 @@ npm run build --workspace=packages/shared
 
 **Solution:**
 1. Check if Docker is running
-2. Start the database: `docker-compose -f docker-compose.dev.yml up -d`
+2. Start the database:
+   - v2: `docker compose -f docker-compose.dev.yml up -d`
+   - v1: `docker-compose -f docker-compose.dev.yml up -d`
 3. Verify with `docker ps`
 
 ### Error: Prisma migration failed
@@ -245,11 +260,19 @@ npm run build --workspace=packages/shared
 
 2. **Stop the database container:**
    ```bash
+   # Docker Compose v2
+   docker compose -f docker-compose.dev.yml down
+
+   # Docker Compose v1
    docker-compose -f docker-compose.dev.yml down
    ```
 
    To also remove the database data (full reset):
    ```bash
+   # Docker Compose v2
+   docker compose -f docker-compose.dev.yml down -v
+
+   # Docker Compose v1
    docker-compose -f docker-compose.dev.yml down -v
    ```
 
@@ -263,11 +286,13 @@ npm run build --workspace=packages/shared
 | Install dependencies | `npm install` |
 | Build shared package | `npm run build --workspace=packages/shared` |
 | Create .env file | `cp apps/backend/.env.example apps/backend/.env` |
-| Start database | `docker-compose -f docker-compose.dev.yml up -d` |
+| Start database (v2) | `docker compose -f docker-compose.dev.yml up -d` |
+| Start database (v1) | `docker-compose -f docker-compose.dev.yml up -d` |
 | Run migrations | `npm run prisma:migrate --workspace=apps/backend` |
 | Start backend | `npm run dev --workspace=apps/backend` |
 | Run tests | `npm run test --workspace=apps/backend` |
-| Stop database | `docker-compose -f docker-compose.dev.yml down` |
+| Stop database (v2) | `docker compose -f docker-compose.dev.yml down` |
+| Stop database (v1) | `docker-compose -f docker-compose.dev.yml down` |
 
 ---
 
