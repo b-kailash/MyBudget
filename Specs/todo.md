@@ -12,7 +12,6 @@ Track progress by marking items with `[x]` when complete.
 2. Read `Specs/Specs.md` for full specification
 3. Check git status: `git status && git log --oneline -5`
 4. **Recommended Next Tasks (Priority Order):**
-   - **Phase 1D.1** - Security Hardening (password policy, rate limiting, account lockout)
    - **Phase 1.5** - Family Member Management (invitations, member lifecycle)
    - **Phase 1F** - Integration Testing (items 27-28)
    - **Phase 2** - Web Frontend
@@ -23,14 +22,14 @@ Track progress by marking items with `[x]` when complete.
 # Start PostgreSQL
 docker-compose -f docker-compose.dev.yml up -d
 
-# Run database migration (if not done)
-cd apps/backend && npx prisma migrate dev --name initial_schema
+# Run database migration (includes new security tables)
+cd apps/backend && npx prisma migrate dev --name add_security_tables
 
 # Start backend
 npm run dev --workspace=apps/backend
 ```
 
-**Last commit:** `4b91423` - feat(backend): complete backend API with auth and CRUD endpoints (Phases 1B-1E)
+**Last commit:** `16c937a` - feat(security): Implement Phase 1D.1 security hardening
 
 ---
 
@@ -99,16 +98,16 @@ npm run dev --workspace=apps/backend
 - [x] 19. Implement auth middleware for protected routes.
 - [x] 20. Add request validation middleware using Zod schemas from shared package.
 
-#### Phase 1D.1 – Security Hardening (from Gap Analysis)
+#### Phase 1D.1 – Security Hardening ✅ (from Gap Analysis)
 
-- [ ] 20a. Implement password policy validation (min 8 chars, uppercase, lowercase, number).
-- [ ] 20b. Implement rate limiting middleware for auth endpoints (5 req/min per IP).
-- [ ] 20c. Add rate limiting for general API endpoints (100 req/min per user).
-- [ ] 20d. Implement account lockout after 5 failed login attempts (15 min lockout).
-- [ ] 20e. Track failed login attempts in database with timestamps.
-- [ ] 20f. Implement forgot password endpoint (`POST /api/v1/auth/forgot-password`).
-- [ ] 20g. Implement password reset endpoint (`POST /api/v1/auth/reset-password`).
-- [ ] 20h. Invalidate all refresh tokens on password reset.
+- [x] 20a. Implement password policy validation (min 8 chars, uppercase, lowercase, number).
+- [x] 20b. Implement rate limiting middleware for auth endpoints (5 req/min per IP).
+- [x] 20c. Add rate limiting for general API endpoints (100 req/min per user).
+- [x] 20d. Implement account lockout after 5 failed login attempts (15 min lockout).
+- [x] 20e. Track failed login attempts in database with timestamps.
+- [x] 20f. Implement forgot password endpoint (`POST /api/v1/auth/forgot-password`).
+- [x] 20g. Implement password reset endpoint (`POST /api/v1/auth/reset-password`).
+- [x] 20h. Invalidate all refresh tokens on password reset.
 
 ### Phase 1E – Core CRUD Endpoints ✅
 
