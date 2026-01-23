@@ -49,11 +49,28 @@ The app is for a single family or multiple families, with user accounts, shared 
 - Email/password login with secure password hashing.
 - Each user belongs to one family.
 - Roles:
-  - `family_admin`: manage users, accounts, categories, budgets.
+  - `family_admin`: manage users, accounts, categories, budgets, invite/remove members.
   - `member`: manage own transactions, view family data.
   - `viewer`: read-only access to family data.
 - Profile fields:
   - Name, email, role, status (active/disabled), created_at.
+
+#### 3.1.1 Family Member Management
+
+- **Invitation Flow:**
+  - `family_admin` can generate secure, single-use invitation links/codes.
+  - Invitations have expiration (e.g., 7 days) and can be revoked.
+  - New users joining via invite are added to the inviting family.
+  - Admin specifies role (`member` or `viewer`) when creating invitation.
+- **Member Management:**
+  - `family_admin` can change member roles (promote/demote).
+  - `family_admin` can remove members from family.
+  - `family_admin` can disable/re-enable member accounts.
+  - Safeguard: A family must always have at least one active `family_admin`.
+- **Forgot Password Flow:**
+  - Users can request password reset via email.
+  - System sends secure, time-limited reset link.
+  - Password reset invalidates all existing refresh tokens.
 
 ### 3.2 Accounts \& Categories
 
@@ -72,6 +89,10 @@ The app is for a single family or multiple families, with user accounts, shared 
 - Fields: - id, family_id, account_id, category_id, user_id, type (income, expense, transfer),
   amount, currency, date, payee, notes, transfer_account_id (for internal transfers),
   created_at, updated_at.
+- **Multi-Currency (V1 Restriction):**
+  - For V1, all transactions MUST be in the account's currency.
+  - Validation enforces transaction currency matches account currency.
+  - Multi-currency with exchange rates is deferred to future work.
 - CRUD endpoints:
   - Create, read (list, detail), update, delete within a family.
 - Recurring transactions:
@@ -106,8 +127,22 @@ The app is for a single family or multiple families, with user accounts, shared 
   - Budget overrun alerts.
   - Upcoming recurring transactions.
 - For now, implement:
-  - Internal “alerts” table and API.
+  - Internal "alerts" table and API.
   - Option to notify via email or in-app list later.
+
+### 3.7 Transaction Import (from Financial Institutions)
+
+- Supported formats: CSV, XLSX/XLS, OFX/QFX, QIF.
+- **Security Requirements:**
+  - **File Validation:** Validate by content/magic numbers, not file extension.
+  - **Size Limits:** Max 5MB per file, enforced at web server and backend.
+  - **Sandboxed Processing:** Parse files in separate worker thread/process.
+  - **Input Sanitization:** Treat all imported data as untrusted; sanitize all fields.
+  - **Disable Dangerous Features:** Configure parsers to disable XML external entities (XXE) in XLSX.
+- **Duplicate Detection:**
+  - Match by date + amount + payee (fuzzy matching).
+  - Flag potential duplicates in preview before import.
+  - User chooses to skip or import anyway.
 
 ---
 
@@ -132,12 +167,22 @@ The app is for a single family or multiple families, with user accounts, shared 
       - UUID primary key.
       - `updated_at` timestamp.
       - `is_deleted` flag for soft deletes.
-    - Local “changes/outbox” table tracking unsynced operations (create/update/delete).
+      - `version` field for optimistic locking.
+    - Local "changes/outbox" table tracking unsynced operations (create/update/delete).
     - Sync process:
 
 1. On connectivity or manual trigger, push local unsynced changes to backend via batched endpoint(s).
-2. Backend applies changes, resolves conflicts using “last write wins” based on `updated_at`.
-3. Backend returns updated records; mobile client updates local SQLite tables. - Conflicts: - If both mobile and server updated same record, prefer latest `updated_at`.
+2. Backend validates each change against current server state.
+3. Backend returns updated records; mobile client updates local SQLite tables.
+
+- **Conflict Resolution (Changed from "last write wins"):**
+  - Backend detects stale updates by comparing `version` or `updated_at`.
+  - If conflict detected, backend returns `409 Conflict` with current server state.
+  - Client must handle `409` by:
+    1. Fetching latest data from server.
+    2. Presenting conflict to user with both versions.
+    3. User manually resolves conflict (choose local, server, or merge).
+  - This prevents silent data loss in financial records.
 
 ---
 
@@ -150,8 +195,31 @@ The app is for a single family or multiple families, with user accounts, shared 
 - PostgreSQL for persistent storage.
 - ORM: Prisma or TypeORM (any widely used, migration-capable ORM is acceptable).
 - Authentication:
-  - JWT (access + optional refresh) or secure cookie sessions.
+  - JWT (access + refresh tokens).
+  - Web: Store tokens in secure, `HttpOnly` cookies to prevent XSS token theft.
+  - Mobile: Store tokens in secure device storage.
   - Password hashing with bcrypt or argon2.
+
+### 5.1.1 Security Requirements
+
+- **Password Policy:**
+  - Minimum 8 characters.
+  - Must contain at least one uppercase, one lowercase, one number.
+  - Validated server-side using Zod schemas.
+- **Rate Limiting:**
+  - Auth endpoints (`/login`, `/register`, `/refresh`, `/forgot-password`): Max 5 requests per minute per IP.
+  - API endpoints: Max 100 requests per minute per authenticated user.
+  - Implement from Phase 1B (not deferred to polish phase).
+- **Account Lockout:**
+  - Lock account for 15 minutes after 5 failed login attempts.
+  - Track failed attempts in database.
+  - Notify user via email on lockout (if email service configured).
+- **Role-Based Access Control:**
+  - Each endpoint must explicitly define allowed roles.
+  - Middleware enforces role checks before route handlers.
+  - `family_admin`: Full CRUD on all family resources, user management.
+  - `member`: Read all family data, CRUD own transactions only.
+  - `viewer`: Read-only access to all family data.
 
 ### 5.2 API Design
 

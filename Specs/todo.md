@@ -11,7 +11,11 @@ Track progress by marking items with `[x]` when complete.
 1. Read this file (`Specs/todo.md`) to see current progress
 2. Read `Specs/Specs.md` for full specification
 3. Check git status: `git status && git log --oneline -5`
-4. Next task: **Phase 1F - Testing (Items 26-29)** OR skip to **Phase 2 - Web Frontend**
+4. **Recommended Next Tasks (Priority Order):**
+   - **Phase 1D.1** - Security Hardening (password policy, rate limiting, account lockout)
+   - **Phase 1.5** - Family Member Management (invitations, member lifecycle)
+   - **Phase 1F** - Integration Testing (items 27-28)
+   - **Phase 2** - Web Frontend
 
 **Before running the backend:**
 
@@ -82,7 +86,7 @@ npm run dev --workspace=apps/backend
 - [x] 14. Add database indexes per spec (family_id+date, account_id, category_id, user_id on transactions).
 - [x] 15. Run initial migration and verify schema.
 
-### Phase 1D – Authentication ✅
+### Phase 1D – Authentication ✅ (Core) + Security Hardening
 
 - [x] 16. Implement password hashing utility (bcrypt).
 - [x] 17. Implement JWT utilities (sign, verify, refresh token logic).
@@ -94,6 +98,17 @@ npm run dev --workspace=apps/backend
   - `GET /api/v1/auth/me` - Returns current user profile
 - [x] 19. Implement auth middleware for protected routes.
 - [x] 20. Add request validation middleware using Zod schemas from shared package.
+
+#### Phase 1D.1 – Security Hardening (from Gap Analysis)
+
+- [ ] 20a. Implement password policy validation (min 8 chars, uppercase, lowercase, number).
+- [ ] 20b. Implement rate limiting middleware for auth endpoints (5 req/min per IP).
+- [ ] 20c. Add rate limiting for general API endpoints (100 req/min per user).
+- [ ] 20d. Implement account lockout after 5 failed login attempts (15 min lockout).
+- [ ] 20e. Track failed login attempts in database with timestamps.
+- [ ] 20f. Implement forgot password endpoint (`POST /api/v1/auth/forgot-password`).
+- [ ] 20g. Implement password reset endpoint (`POST /api/v1/auth/reset-password`).
+- [ ] 20h. Invalidate all refresh tokens on password reset.
 
 ### Phase 1E – Core CRUD Endpoints ✅
 
@@ -123,6 +138,34 @@ npm run dev --workspace=apps/backend
 - [ ] 27. Write integration tests for auth endpoints.
 - [ ] 28. Write integration tests for CRUD endpoints (accounts, categories, transactions).
 - [x] 29. Add npm scripts: `test`, `test:watch`, `test:coverage`.
+
+---
+
+## Phase 1.5 – Family Member Management (from Gap Analysis)
+
+> **Critical:** This phase addresses the largest gap in the specification. Without it, the "family" feature is unusable beyond a single user.
+
+### Phase 1.5A – Invitation System
+
+- [ ] 29a. Add `family_invitations` table:
+  - `id` (uuid), `family_id`, `invited_by_user_id`, `email`, `role` (member/viewer)
+  - `token_hash`, `expires_at`, `accepted_at`, `revoked_at`, `created_at`
+- [ ] 29b. Implement invitation endpoints:
+  - `POST /api/v1/family/invite` - Create invitation (family_admin only)
+  - `GET /api/v1/family/invitations` - List pending invitations
+  - `DELETE /api/v1/family/invitations/:id` - Revoke invitation
+  - `POST /api/v1/auth/accept-invite` - Accept invitation and create account
+- [ ] 29c. Add invitation validation (check expiry, already used, email not registered).
+
+### Phase 1.5B – Member Management
+
+- [ ] 29d. Implement member management endpoints:
+  - `GET /api/v1/family/members` - List family members
+  - `PUT /api/v1/family/members/:id/role` - Change member role (family_admin only)
+  - `DELETE /api/v1/family/members/:id` - Remove member from family
+  - `PUT /api/v1/family/members/:id/status` - Enable/disable member
+- [ ] 29e. Add safeguard: prevent removing last family_admin.
+- [ ] 29f. Add safeguard: prevent self-demotion if only admin.
 
 ---
 
@@ -175,6 +218,19 @@ npm run dev --workspace=apps/backend
 > **Note:** Import functionality allows users to bulk-import transactions from bank exports and financial software.
 
 ### Phase 3A-Backend – Import Endpoints & Parsers
+
+> **Security Note:** File import is a significant attack vector. Security tasks are mandatory before deployment.
+
+#### Phase 3A-Security – Import Security (from Gap Analysis)
+
+- [ ] 55a. Implement file validation by magic numbers (not extension/MIME type).
+- [ ] 55b. Enforce strict file size limits (max 5MB) at server and backend level.
+- [ ] 55c. Configure XLSX parser to disable XML External Entities (XXE).
+- [ ] 55d. Implement sandboxed file processing (worker thread or separate process).
+- [ ] 55e. Implement input sanitization for all imported fields (prevent XSS/injection).
+- [ ] 55f. Add file upload rate limiting (max 10 imports per hour per user).
+
+#### Phase 3A-Core – Import Tables & Parsers
 
 - [ ] 56. Add `import_batches` table to track import history:
   - `id` (uuid), `family_id`, `user_id`, `filename`, `file_type`, `status` (pending, processing, completed, failed)
@@ -242,11 +298,15 @@ npm run dev --workspace=apps/backend
 
 ### Phase 5A – Backend Sync Endpoint
 
+> **Security Note:** Changed from "last write wins" to proper conflict detection per gap analysis.
+
 - [ ] 78. Implement `/api/v1/sync` endpoint:
-  - Accepts batched changes (creates, updates, deletes) with timestamps
-  - Applies "last write wins" conflict resolution
+  - Accepts batched changes (creates, updates, deletes) with timestamps and version
+  - Detects conflicts by comparing version/updated_at
+  - Returns `409 Conflict` with current server state for stale updates
   - Returns authoritative versions of changed records
   - Returns all records updated since client's last sync timestamp
+- [ ] 78a. Add `version` field to syncable entities for optimistic locking.
 
 ### Phase 5B – Mobile SQLite & Repository Layer
 
@@ -265,6 +325,13 @@ npm run dev --workspace=apps/backend
 - [ ] 84. Implement automatic background sync on connectivity change.
 - [ ] 85. Add sync status UI and manual "sync now" button in settings.
 - [ ] 86. Handle sync errors gracefully with retry logic.
+
+#### Phase 5C.1 – Conflict Resolution UI (from Gap Analysis)
+
+- [ ] 86a. Handle `409 Conflict` responses from sync endpoint.
+- [ ] 86b. Implement conflict resolution UI showing both local and server versions.
+- [ ] 86c. Allow user to choose: keep local, keep server, or merge manually.
+- [ ] 86d. Store conflict history for audit purposes.
 
 ---
 
@@ -317,6 +384,13 @@ npm run dev --workspace=apps/backend
   - (Optional) Push to container registry
 - [ ] 106. Add branch protection rules for main.
 
+### Phase 8.1 – Security Hardening in CI/CD (from Gap Analysis)
+
+- [ ] 106a. Add `npm audit` to CI pipeline to detect vulnerable dependencies.
+- [ ] 106b. Configure Dependabot for automated dependency updates.
+- [ ] 106c. Add SAST (Static Application Security Testing) scan to workflow.
+- [ ] 106d. Fail builds on high/critical vulnerabilities.
+
 ---
 
 ## Phase 9 – Polish & Documentation
@@ -324,7 +398,7 @@ npm run dev --workspace=apps/backend
 - [ ] 107. Improve error messages and user feedback on web.
 - [ ] 108. Improve error messages and user feedback on mobile.
 - [ ] 109. Add loading states and empty states to all list views.
-- [ ] 110. Add rate limiting to backend API.
+- [x] ~~110. Add rate limiting to backend API.~~ (Moved to Phase 1D.1 per gap analysis)
 - [ ] 111. Write comprehensive README with:
   - Project overview
   - Local development setup (with and without Docker)
@@ -336,11 +410,11 @@ npm run dev --workspace=apps/backend
 
 ## Future Work (Not in current scope)
 
-- [ ] Password reset / forgot password flow (requires email service)
-- [ ] Family member invite flow
+- [x] ~~Password reset / forgot password flow~~ (Moved to Phase 1D.1)
+- [x] ~~Family member invite flow~~ (Moved to Phase 1.5)
 - [ ] Email notifications for alerts
 - [ ] PWA + IndexedDB for web offline support
-- [ ] Multi-currency conversion with exchange rates
+- [ ] Multi-currency conversion with exchange rates (V1 restricts to account currency)
 - [ ] Advanced analytics and custom reports
 - [ ] Data export functionality (CSV, PDF reports)
 - [ ] Bank API integrations (Plaid, Yodlee) for automatic transaction sync
@@ -363,3 +437,8 @@ npm run dev --workspace=apps/backend
 | Mobile Framework      | Expo                        | Easier setup, good SQLite support                 |
 | Shared Package Timing | Phase 1A (before backend)   | Prevents type duplication                         |
 | File Parsing          | xlsx + custom OFX/QIF       | xlsx is standard for Excel; OFX/QIF need custom   |
+| Sync Conflicts        | 409 + User Resolution       | "Last write wins" causes data loss in finance app |
+| Multi-Currency V1     | Single currency per account | Defers exchange rate complexity to future         |
+| JWT Web Storage       | HttpOnly Cookies            | Prevents XSS token theft vs localStorage          |
+| Rate Limiting         | Phase 1D (not Phase 9)      | Auth endpoints are primary attack targets         |
+| File Import Security  | Sandboxed + Validated       | Prevents RCE, DoS, and injection attacks          |
