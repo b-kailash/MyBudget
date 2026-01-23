@@ -234,9 +234,9 @@ CREATE_ACCOUNT_RESPONSE=$(curl -s -X POST "$API_URL/accounts" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $ACCESS_TOKEN" \
     -d '{
-        "name": "Test Checking Account",
-        "type": "CHECKING",
-        "balance": 1000.00,
+        "name": "Test Bank Account",
+        "type": "BANK",
+        "openingBalance": 1000.00,
         "currency": "USD"
     }')
 
