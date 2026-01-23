@@ -3,11 +3,11 @@
  */
 export enum UserRole {
   /** Full administrative access to family budget */
-  FAMILY_ADMIN = 'family_admin',
+  FAMILY_ADMIN = 'FAMILY_ADMIN',
   /** Standard member with read/write access */
-  MEMBER = 'member',
+  MEMBER = 'MEMBER',
   /** Read-only access */
-  VIEWER = 'viewer',
+  VIEWER = 'VIEWER',
 }
 
 /**
@@ -15,9 +15,9 @@ export enum UserRole {
  */
 export enum UserStatus {
   /** Active user account */
-  ACTIVE = 'active',
+  ACTIVE = 'ACTIVE',
   /** Disabled user account */
-  DISABLED = 'disabled',
+  DISABLED = 'DISABLED',
 }
 
 /**
@@ -25,13 +25,13 @@ export enum UserStatus {
  */
 export enum AccountType {
   /** Cash account */
-  CASH = 'cash',
+  CASH = 'CASH',
   /** Bank account */
-  BANK = 'bank',
+  BANK = 'BANK',
   /** Credit card account */
-  CARD = 'card',
+  CARD = 'CARD',
   /** Savings account */
-  SAVINGS = 'savings',
+  SAVINGS = 'SAVINGS',
 }
 
 /**
@@ -39,11 +39,11 @@ export enum AccountType {
  */
 export enum TransactionType {
   /** Income transaction */
-  INCOME = 'income',
+  INCOME = 'INCOME',
   /** Expense transaction */
-  EXPENSE = 'expense',
+  EXPENSE = 'EXPENSE',
   /** Transfer between accounts */
-  TRANSFER = 'transfer',
+  TRANSFER = 'TRANSFER',
 }
 
 /**
@@ -51,11 +51,11 @@ export enum TransactionType {
  */
 export enum CategoryType {
   /** Income category */
-  INCOME = 'income',
+  INCOME = 'INCOME',
   /** Expense category */
-  EXPENSE = 'expense',
+  EXPENSE = 'EXPENSE',
   /** Transfer category */
-  TRANSFER = 'transfer',
+  TRANSFER = 'TRANSFER',
 }
 
 /**
@@ -63,9 +63,9 @@ export enum CategoryType {
  */
 export enum BudgetPeriod {
   /** Weekly budget period */
-  WEEKLY = 'weekly',
+  WEEKLY = 'WEEKLY',
   /** Monthly budget period */
-  MONTHLY = 'monthly',
+  MONTHLY = 'MONTHLY',
   /** Yearly budget period */
-  YEARLY = 'yearly',
+  YEARLY = 'YEARLY',
 }
