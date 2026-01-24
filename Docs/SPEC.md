@@ -101,6 +101,8 @@ The app is for a single family or multiple families, with user accounts, shared 
 
 ### 3.4 Budgeting \& Dashboards
 
+#### 3.4.1 Basic Budgeting (V1)
+
 - Monthly view:
   - Total income vs expenses.
   - Net savings.
@@ -110,6 +112,56 @@ The app is for a single family or multiple families, with user accounts, shared 
   - Recent transactions list.
   - Top spending categories for the current period.
   - Short trend chart (month-over-month totals).
+
+#### 3.4.2 Advanced Budgeting Engine (V2)
+
+A flexible budgeting engine supporting multiple methodologies as "views" over the same data model.
+
+**Core Data Model:**
+- **Budget Periods:** Monthly/weekly/custom periods with status (planning, active, closed)
+- **Budget Lines:** Per-category allocations with budgeted, funded, spent, and rollover amounts
+- **Envelopes/Buckets:** Digital envelopes for savings goals with targets and auto-funding
+- **Category Metadata:** Tags for 50/30/20 classification (need/want/savings)
+
+**Supported Budgeting Methods:**
+
+| Method | Description | Use Case |
+|--------|-------------|----------|
+| **Zero-Based** | Every dollar assigned to a category; income - budgeted = 0 | Detailed control |
+| **Digital Envelopes** | Money moved into virtual envelopes; spending pulls from envelope | Visual allocation |
+| **50/30/20 View** | Categories tagged as need/want/savings; shows actual vs. target % | Simple guideline |
+| **Pay-Yourself-First** | Goals funded automatically at income; remainder to budget | Savings focused |
+| **No-Budget Mode** | Track spending and trends without allocations | Cash flow only |
+
+**Zero-Based Budgeting:**
+- "To Be Budgeted" display showing unallocated income
+- Category groups with subtotals
+- Quick reallocation between categories
+- Rollover option for unused budget
+
+**Digital Envelopes:**
+- Visual envelope cards with balances
+- Drag-and-drop funding interface
+- Move money between envelopes
+- Envelope balance history
+
+**50/30/20 View:**
+- Each category tagged as `need`, `want`, or `savings`
+- Donut chart showing actual vs. target percentages
+- Suggestions when out of balance
+- What-if calculator
+
+**Pay-Yourself-First:**
+- Define savings goals with targets and deadlines
+- Set auto-fund amounts and priority order
+- "Paycheck Wizard" for income allocation
+- Projected goal completion dates
+
+**No-Budget Mode:**
+- Transaction categorization without budgets
+- Focus on trends and insights
+- Anomaly detection (unusual spending)
+- Optional category limits (alerts only)
 
 ### 3.5 Reporting
 
@@ -132,6 +184,8 @@ The app is for a single family or multiple families, with user accounts, shared 
 
 ### 3.7 Transaction Import (from Financial Institutions)
 
+#### 3.7.1 File Import
+
 - Supported formats: CSV, XLSX/XLS, OFX/QFX, QIF.
 - **Security Requirements:**
   - **File Validation:** Validate by content/magic numbers, not file extension.
@@ -143,6 +197,49 @@ The app is for a single family or multiple families, with user accounts, shared 
   - Match by date + amount + payee (fuzzy matching).
   - Flag potential duplicates in preview before import.
   - User chooses to skip or import anyway.
+
+#### 3.7.2 Bank API Integrations (Open Banking)
+
+In addition to file imports, support automatic transaction sync via bank APIs and open banking aggregators.
+
+**Supported Providers:**
+
+| Provider | Coverage | Recommended For |
+|----------|----------|-----------------|
+| **Nordigen (GoCardless)** | EU (2,300+ banks) | EU/Ireland - Free tier available |
+| **TrueLayer** | UK, EU (2,500+ banks) | Ireland/UK - Best Irish bank coverage |
+| **Enable Banking** | Nordics, EU (2,800+ banks) | Nordic countries, Irish credit unions |
+| **Salt Edge** | Global (5,000+ sources) | Fallback with broad coverage |
+| **Yapily** | UK, EU (1,800+ banks) | Developer-friendly, real-time payments |
+| **Tink** | EU-wide (3,400+ banks) | Enterprise (owned by Visa) |
+| **Plaid** | US, Canada, UK, EU | US/Canada - Best coverage |
+| **Yodlee** | Global (17,000+ institutions) | Enterprise, broadest coverage |
+| **Basiq** | Australia | Australia - CDR compliant |
+
+**Ireland & UK Specific:**
+- TrueLayer: AIB, BOI, PTSB, Ulster, KBC (best coverage)
+- Enable Banking: Irish banks + Credit Unions
+- Nordigen: AIB, Bank of Ireland, PTSB, Revolut Ireland (free tier)
+
+**Integration Requirements:**
+- Provider abstraction layer for multiple integrations
+- Encrypted token storage (AES-256) for access/refresh tokens
+- Background sync job (every 4-6 hours)
+- Manual sync trigger option
+- Duplicate detection against existing transactions
+- Auto-categorization rules based on payee
+- User consent management and revocation
+- 90-day consent refresh handling (PSD2 requirement)
+
+**Connected Account Data Model:**
+- `connected_accounts` table: provider, tokens (encrypted), institution info, sync status
+- `account_sync_history` table: sync timestamps, transaction counts, errors
+
+**User Preferences:**
+- Auto-import vs. review-first workflow
+- Sync frequency (daily, twice daily, manual)
+- Large transaction notifications
+- Category mapping rules
 
 ---
 
@@ -199,6 +296,11 @@ The app is for a single family or multiple families, with user accounts, shared 
   - Web: Store tokens in secure, `HttpOnly` cookies to prevent XSS token theft.
   - Mobile: Store tokens in secure device storage.
   - Password hashing with bcrypt or argon2.
+- **Required Environment Variables:**
+  - `JWT_SECRET` - Secret for signing access tokens (min 32 chars)
+  - `REFRESH_TOKEN_SECRET` - Secret for signing refresh tokens (min 32 chars)
+  - `DATABASE_URL` - PostgreSQL connection string
+  - `TOKEN_ENCRYPTION_KEY` - For encrypting bank API tokens (AES-256)
 
 ### 5.1.1 Security Requirements
 
@@ -265,8 +367,39 @@ Include foreign keys with ON DELETE RESTRICT for critical entities and indexes o
 - React Router for routing.
 - State management: React Query or SWR for server state, plus local context or Zustand for global app state.
 - Styling:
-  - Tailwind CSS or component library (MUI/Chakra) – pick one and be consistent.
+  - **Component Library:** shadcn/ui (built on Radix UI + Tailwind CSS)
+  - Tailwind CSS for utility classes
 - TypeScript (preferred).
+- Charts: Recharts or Chart.js
+
+### 6.1.1 Modern UI Design System
+
+- **Design Principles:**
+  - Clean, minimal interface with generous whitespace
+  - Consistent spacing scale (4px base unit)
+  - Subtle shadows and rounded corners for depth
+  - Smooth micro-animations (150-300ms transitions)
+  - Dark mode support (system preference + manual toggle)
+
+- **Visual Components:**
+  - Elevated card design with subtle borders and shadows
+  - Floating labels and inline validation for forms
+  - Alternating row colors and sticky headers for tables
+  - Collapsible sidebar with icons + labels
+  - Command palette (Cmd+K) for quick navigation
+  - Toast notifications for action feedback
+  - Skeleton loading states instead of spinners
+
+- **Responsive Design:**
+  - Mobile-first approach
+  - Breakpoints: sm (640px), md (768px), lg (1024px), xl (1280px)
+  - Touch-friendly tap targets (minimum 44x44px)
+
+- **Accessibility (WCAG 2.1 AA):**
+  - Keyboard navigation for all interactive elements
+  - ARIA labels and roles
+  - Focus indicators
+  - Screen reader announcements for dynamic content
 
 ### 6.2 Pages \& Components
 
@@ -332,19 +465,91 @@ Include foreign keys with ON DELETE RESTRICT for critical entities and indexes o
 
 ## 9. Docker \& DevOps
 
-- Dockerfile for backend:
-  - Install dependencies, build TS, run migrations, start server.
-- Optional Dockerfile for web (served by Node/NGINX or dev server).
-- docker-compose.yml for local dev:
-  - `backend` service.
-  - `db` service (PostgreSQL).
-  - `web` service (optional).
-- GitHub repository:
-  - GitHub Actions workflow (later) for CI:
-    - Install dependencies.
-    - Run tests.
-    - Build backend and web.
-    - Optionally build and push Docker image.
+### 9.1 Full Containerization
+
+All services run in Docker containers, managed by Docker Compose.
+
+**Container Architecture:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Docker Network                            │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
+│  │  nginx   │  │ backend  │  │   web    │  │ postgres │    │
+│  │ (proxy)  │  │ (api)    │  │ (react)  │  │   (db)   │    │
+│  │  :80/443 │  │  :3000   │  │  :5173   │  │  :5432   │    │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Service Definitions:**
+
+| Service | Image/Build | Health Check | Dependencies |
+|---------|-------------|--------------|--------------|
+| `db` | postgres:16-alpine | pg_isready | - |
+| `backend` | Custom Dockerfile | GET /health | db (healthy) |
+| `web` | Custom Dockerfile | nginx health | backend (healthy) |
+| `nginx` | nginx:alpine (optional) | - | web, backend |
+
+**Backend Dockerfile (multi-stage):**
+- Stage 1: Build TypeScript with node:20-alpine
+- Stage 2: Production image with minimal footprint
+- Auto-run Prisma migrations on startup
+- Non-root user for security
+
+**Web Dockerfile (multi-stage):**
+- Stage 1: Build React app with node:20-alpine
+- Stage 2: Serve with nginx:alpine
+- Custom nginx.conf for SPA routing (fallback to index.html)
+- Gzip compression enabled
+
+### 9.2 Docker Compose Files
+
+- `docker-compose.yml` - Production configuration
+- `docker-compose.dev.yml` - Development with hot reload and volume mounts
+- `docker-compose.override.yml` - Local overrides (gitignored)
+
+### 9.3 Automated Startup & Shutdown
+
+**Management Script: `mybudget.sh`**
+```bash
+./mybudget.sh [command] [options]
+
+Commands:
+  start       Start all services
+  stop        Stop all services gracefully
+  restart     Restart all services
+  status      Show status of all services
+  logs        Tail logs (or specify service)
+  build       Build all Docker images
+  migrate     Run database migrations
+  seed        Seed database with sample data
+  test        Run test suite
+  clean       Remove containers, volumes, and images
+
+Options:
+  --dev       Use development configuration (hot reload)
+  --prod      Use production configuration
+  --detach    Run in background
+```
+
+**Script Features:**
+- Dependency checks (Docker, Docker Compose, Node.js versions)
+- Environment validation before startup
+- Health checks with wait-for-healthy
+- Graceful shutdown (SIGTERM with timeout)
+- Color-coded output
+
+### 9.4 CI/CD
+
+- GitHub Actions workflow for PRs:
+  - Install dependencies
+  - Run lint and type checks
+  - Run tests
+  - Build backend and web
+- GitHub Actions workflow for main branch:
+  - All PR checks
+  - Build Docker images
+  - Push to container registry (optional)
 
 ---
 
@@ -359,10 +564,59 @@ Include foreign keys with ON DELETE RESTRICT for critical entities and indexes o
 
 ## 11. Implementation Phases
 
+### Core Phases (V1)
 1. Backend core (auth, families, accounts, categories, transactions).
 2. Web frontend basic flows.
 3. Mobile app basic flows (online only).
 4. Add offline + sync in mobile.
 5. Add reports and dashboards.
-6. Add Docker \& CI.
+6. Add Docker & CI.
 7. Add PWA/offline for web (optional, later).
+
+### Enhancement Phases (V2)
+
+**Phase A: Full Containerization (1 week)**
+1. Fix `.env.example` (add `REFRESH_TOKEN_SECRET`)
+2. Create production Dockerfiles (backend + web)
+3. Update docker-compose files for all services
+4. Create `mybudget.sh` management script
+5. Test full stack in containers
+6. Document deployment process
+
+**Phase B: Modern UI (2-3 weeks)**
+1. Install and configure shadcn/ui
+2. Create design tokens and theme
+3. Refactor existing components to new design system
+4. Add dark mode support
+5. Implement loading states and animations
+6. Accessibility audit and fixes
+
+**Phase C: Advanced Budgeting Engine (3-4 weeks)**
+1. Database migrations for new entities (budget_periods, budget_lines, envelopes)
+2. Budget periods and lines API
+3. Envelopes/buckets API
+4. Zero-based budgeting UI
+5. 50/30/20 view computation and UI
+6. Pay-yourself-first workflow
+7. No-budget mode dashboard
+8. User preference management
+
+**Phase D: Bank API Integrations (2-3 weeks)**
+1. Provider abstraction layer
+2. Nordigen integration (free tier, EU/Ireland)
+3. Transaction sync service
+4. Connected accounts management UI
+5. Auto-categorization rules
+6. (Optional) TrueLayer integration for better Irish coverage
+
+---
+
+## 12. Future Work (Not in Current Scope)
+
+- Email notifications for alerts
+- PWA + IndexedDB for web offline support
+- Multi-currency conversion with exchange rates
+- Advanced analytics and custom reports
+- Data export functionality (CSV, PDF reports)
+- Receipt image attachment to transactions
+- Mobile import functionality
