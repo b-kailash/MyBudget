@@ -10,6 +10,7 @@ import {
   refreshTokenSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  acceptInvitationSchema,
 } from '@mybudget/shared';
 import { prisma } from '../lib/prisma.js';
 import { validate } from '../middleware/validate.js';
@@ -774,6 +775,149 @@ router.post(
         error: {
           code: 'INTERNAL_ERROR',
           message: 'An error occurred while resetting your password',
+        },
+      };
+      res.status(500).json(response);
+    }
+  }
+);
+
+/**
+ * POST /api/v1/auth/accept-invite
+ * Accept a family invitation and create a new user account
+ */
+router.post(
+  '/accept-invite',
+  authRateLimiter,
+  validate(acceptInvitationSchema),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { token, name, password } = req.body;
+
+      // Hash the provided token to compare with stored hash
+      const tokenHash = crypto
+        .createHash('sha256')
+        .update(token)
+        .digest('hex');
+
+      // Find the invitation
+      const invitation = await prisma.familyInvitation.findFirst({
+        where: {
+          tokenHash,
+          acceptedAt: null,
+          revokedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        include: {
+          family: true,
+        },
+      });
+
+      if (!invitation) {
+        const response: ApiResponse<null> = {
+          data: null,
+          error: {
+            code: 'INVALID_INVITATION',
+            message: 'Invalid, expired, or already used invitation',
+          },
+        };
+        res.status(400).json(response);
+        return;
+      }
+
+      // Check if email is already registered
+      const existingUser = await prisma.user.findUnique({
+        where: { email: invitation.email },
+      });
+
+      if (existingUser) {
+        const response: ApiResponse<null> = {
+          data: null,
+          error: {
+            code: 'USER_EXISTS',
+            message: 'A user with this email already exists',
+          },
+        };
+        res.status(409).json(response);
+        return;
+      }
+
+      // Hash the password
+      const passwordHash = await hashPassword(password);
+
+      // Map invitation role to user role
+      const userRole = invitation.role === 'MEMBER' ? 'MEMBER' : 'VIEWER';
+
+      // Create user and mark invitation as accepted in a transaction
+      const result = await prisma.$transaction(async (tx) => {
+        // Create the user
+        const user = await tx.user.create({
+          data: {
+            email: invitation.email,
+            passwordHash,
+            name,
+            familyId: invitation.familyId,
+            role: userRole,
+            status: 'ACTIVE',
+          },
+        });
+
+        // Mark invitation as accepted
+        await tx.familyInvitation.update({
+          where: { id: invitation.id },
+          data: { acceptedAt: new Date() },
+        });
+
+        return user;
+      });
+
+      // Generate tokens for automatic login
+      const accessToken = generateAccessToken(
+        result.id,
+        result.familyId,
+        result.role
+      );
+      const refreshToken = generateRefreshToken();
+      const refreshTokenHash = hashRefreshToken(refreshToken);
+
+      // Store refresh token in database
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+
+      await prisma.refreshToken.create({
+        data: {
+          userId: result.id,
+          tokenHash: refreshTokenHash,
+          expiresAt,
+        },
+      });
+
+      // Return response with login data
+      const responseData: LoginResponse = {
+        accessToken,
+        refreshToken,
+        user: {
+          id: result.id,
+          email: result.email,
+          name: result.name,
+          familyId: result.familyId,
+          role: result.role as UserRole,
+        },
+      };
+
+      const response: ApiResponse<LoginResponse> = {
+        data: responseData,
+        error: null,
+      };
+
+      res.status(201).json(response);
+    } catch (error) {
+      console.error('Accept invitation error:', error);
+      const response: ApiResponse<null> = {
+        data: null,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'An error occurred while accepting the invitation',
         },
       };
       res.status(500).json(response);

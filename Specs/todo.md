@@ -12,9 +12,9 @@ Track progress by marking items with `[x]` when complete.
 2. Read `Specs/Specs.md` for full specification
 3. Check git status: `git status && git log --oneline -5`
 4. **Recommended Next Tasks (Priority Order):**
-   - **Phase 1.5** - Family Member Management (invitations, member lifecycle)
    - **Phase 1F** - Integration Testing (items 27-28)
    - **Phase 2** - Web Frontend
+   - **Phase 3** - Backend Reports & Dashboard APIs
 
 **Before running the backend:**
 
@@ -140,31 +140,31 @@ npm run dev --workspace=apps/backend
 
 ---
 
-## Phase 1.5 – Family Member Management (from Gap Analysis)
+## Phase 1.5 – Family Member Management ✅ (from Gap Analysis)
 
 > **Critical:** This phase addresses the largest gap in the specification. Without it, the "family" feature is unusable beyond a single user.
 
-### Phase 1.5A – Invitation System
+### Phase 1.5A – Invitation System ✅
 
-- [ ] 29a. Add `family_invitations` table:
+- [x] 29a. Add `family_invitations` table:
   - `id` (uuid), `family_id`, `invited_by_user_id`, `email`, `role` (member/viewer)
   - `token_hash`, `expires_at`, `accepted_at`, `revoked_at`, `created_at`
-- [ ] 29b. Implement invitation endpoints:
+- [x] 29b. Implement invitation endpoints:
   - `POST /api/v1/family/invite` - Create invitation (family_admin only)
   - `GET /api/v1/family/invitations` - List pending invitations
   - `DELETE /api/v1/family/invitations/:id` - Revoke invitation
   - `POST /api/v1/auth/accept-invite` - Accept invitation and create account
-- [ ] 29c. Add invitation validation (check expiry, already used, email not registered).
+- [x] 29c. Add invitation validation (check expiry, already used, email not registered).
 
-### Phase 1.5B – Member Management
+### Phase 1.5B – Member Management ✅
 
-- [ ] 29d. Implement member management endpoints:
+- [x] 29d. Implement member management endpoints:
   - `GET /api/v1/family/members` - List family members
   - `PUT /api/v1/family/members/:id/role` - Change member role (family_admin only)
   - `DELETE /api/v1/family/members/:id` - Remove member from family
   - `PUT /api/v1/family/members/:id/status` - Enable/disable member
-- [ ] 29e. Add safeguard: prevent removing last family_admin.
-- [ ] 29f. Add safeguard: prevent self-demotion if only admin.
+- [x] 29e. Add safeguard: prevent removing last family_admin.
+- [x] 29f. Add safeguard: prevent self-demotion if only admin.
 
 ---
 
@@ -409,8 +409,8 @@ npm run dev --workspace=apps/backend
 
 ## Future Work (Not in current scope)
 
-- [x] ~~Password reset / forgot password flow~~ (Moved to Phase 1D.1)
-- [x] ~~Family member invite flow~~ (Moved to Phase 1.5)
+- [x] ~~Password reset / forgot password flow~~ (Completed in Phase 1D.1)
+- [x] ~~Family member invite flow~~ (Completed in Phase 1.5)
 - [ ] Email notifications for alerts
 - [ ] PWA + IndexedDB for web offline support
 - [ ] Multi-currency conversion with exchange rates (V1 restricts to account currency)

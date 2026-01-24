@@ -7,6 +7,7 @@ import {
   updateMemberStatusSchema,
   FamilyInvitationResponse,
   FamilyMemberResponse,
+  UserRole,
 } from '@mybudget/shared';
 import { prisma } from '../lib/prisma.js';
 import { validate } from '../middleware/validate.js';
@@ -26,7 +27,7 @@ const INVITATION_EXPIRY_DAYS = 7;
  */
 router.post(
   '/invite',
-  requireRole('FAMILY_ADMIN'),
+  requireRole(UserRole.FAMILY_ADMIN),
   validate(createInvitationSchema),
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -141,7 +142,7 @@ router.post(
  */
 router.get(
   '/invitations',
-  requireRole('FAMILY_ADMIN'),
+  requireRole(UserRole.FAMILY_ADMIN),
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { familyId } = req.user!;
@@ -198,7 +199,7 @@ router.get(
  */
 router.delete(
   '/invitations/:id',
-  requireRole('FAMILY_ADMIN'),
+  requireRole(UserRole.FAMILY_ADMIN),
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
@@ -310,7 +311,7 @@ router.get('/members', async (req: Request, res: Response): Promise<void> => {
  */
 router.put(
   '/members/:id/role',
-  requireRole('FAMILY_ADMIN'),
+  requireRole(UserRole.FAMILY_ADMIN),
   validate(updateMemberRoleSchema),
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -413,7 +414,7 @@ router.put(
  */
 router.put(
   '/members/:id/status',
-  requireRole('FAMILY_ADMIN'),
+  requireRole(UserRole.FAMILY_ADMIN),
   validate(updateMemberStatusSchema),
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -534,7 +535,7 @@ router.put(
  */
 router.delete(
   '/members/:id',
-  requireRole('FAMILY_ADMIN'),
+  requireRole(UserRole.FAMILY_ADMIN),
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
