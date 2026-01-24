@@ -12,8 +12,8 @@ Track progress by marking items with `[x]` when complete.
 2. Read `Specs/Specs.md` for full specification
 3. Check git status: `git status && git log --oneline -5`
 4. **Recommended Next Tasks (Priority Order):**
-   - **Phase 2** - Web Frontend
-   - **Phase 3** - Backend Reports & Dashboard APIs
+   - **Phase 2C** - Dashboard & Reports UI (tasks 45-50)
+   - **Phase 3** - Wire web frontend to new report APIs (task 55)
 
 **Before running the backend:**
 
@@ -202,12 +202,12 @@ npm run dev --workspace=apps/backend
 
 ---
 
-## Phase 3 – Backend Reports & Dashboard APIs
+## Phase 3 – Backend Reports & Dashboard APIs ✅
 
-- [ ] 51. Implement `/api/v1/reports/monthly-summary` endpoint.
-- [ ] 52. Implement `/api/v1/reports/category-breakdown` endpoint.
-- [ ] 53. Implement `/api/v1/reports/trend` endpoint (month-over-month).
-- [ ] 54. Implement `/api/v1/dashboard` endpoint (aggregated data for dashboard widgets).
+- [x] 51. Implement `/api/v1/reports/monthly-summary` endpoint.
+- [x] 52. Implement `/api/v1/reports/category-breakdown` endpoint.
+- [x] 53. Implement `/api/v1/reports/trend` endpoint (month-over-month).
+- [x] 54. Implement `/api/v1/dashboard` endpoint (aggregated data for dashboard widgets).
 - [ ] 55. Wire web frontend reports to new endpoints.
 
 ---

@@ -1,4 +1,4 @@
-import { delay } from './utils';
+import { delay } from './utils.js';
 
 // This will run after each test file
 afterEach(async () => {

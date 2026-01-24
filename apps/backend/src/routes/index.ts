@@ -5,6 +5,7 @@ import accountsRouter from './accounts.js';
 import categoriesRouter from './categories.js';
 import budgetsRouter from './budgets.js';
 import transactionsRouter from './transactions.js';
+import reportsRouter from './reports.js';
 import { apiRateLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
@@ -27,6 +28,8 @@ router.get('/', (_req, res) => {
       categories: '/api/v1/categories',
       budgets: '/api/v1/budgets',
       transactions: '/api/v1/transactions',
+      reports: '/api/v1/reports',
+      dashboard: '/api/v1/dashboard',
     },
     documentation: 'See /health for server status',
   });
@@ -43,6 +46,8 @@ router.use('/api/v1/accounts', apiRateLimiter, accountsRouter);
 router.use('/api/v1/categories', apiRateLimiter, categoriesRouter);
 router.use('/api/v1/budgets', apiRateLimiter, budgetsRouter);
 router.use('/api/v1/transactions', apiRateLimiter, transactionsRouter);
+router.use('/api/v1/reports', apiRateLimiter, reportsRouter);
+router.use('/api/v1/dashboard', apiRateLimiter, reportsRouter);
 // router.use('/api/v1/users', apiRateLimiter, usersRouter);
 
 export default router;
