@@ -1,29 +1,12 @@
-import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
+import { Layout } from '@/components/Layout';
 
 export function DashboardPage() {
-  const { user, logout } = useAuth();
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-bold text-primary-600">MyBudget</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                Welcome, {user?.name}
-              </span>
-              <button onClick={logout} className="btn-outline text-sm">
-                Sign out
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <Layout>
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Summary Cards */}
           <div className="card">
@@ -48,7 +31,7 @@ export function DashboardPage() {
         <div className="mt-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button className="card hover:bg-gray-50 text-center py-8 transition-colors">
+            <Link to="/transactions" className="card hover:bg-gray-50 text-center py-8 transition-colors">
               <svg
                 className="w-8 h-8 mx-auto text-primary-600"
                 fill="none"
@@ -65,8 +48,8 @@ export function DashboardPage() {
               <span className="mt-2 block text-sm font-medium text-gray-900">
                 Add Transaction
               </span>
-            </button>
-            <button className="card hover:bg-gray-50 text-center py-8 transition-colors">
+            </Link>
+            <Link to="/accounts" className="card hover:bg-gray-50 text-center py-8 transition-colors">
               <svg
                 className="w-8 h-8 mx-auto text-primary-600"
                 fill="none"
@@ -83,8 +66,8 @@ export function DashboardPage() {
               <span className="mt-2 block text-sm font-medium text-gray-900">
                 Manage Accounts
               </span>
-            </button>
-            <button className="card hover:bg-gray-50 text-center py-8 transition-colors">
+            </Link>
+            <Link to="/categories" className="card hover:bg-gray-50 text-center py-8 transition-colors">
               <svg
                 className="w-8 h-8 mx-auto text-primary-600"
                 fill="none"
@@ -101,8 +84,8 @@ export function DashboardPage() {
               <span className="mt-2 block text-sm font-medium text-gray-900">
                 Categories
               </span>
-            </button>
-            <button className="card hover:bg-gray-50 text-center py-8 transition-colors">
+            </Link>
+            <Link to="/budgets" className="card hover:bg-gray-50 text-center py-8 transition-colors">
               <svg
                 className="w-8 h-8 mx-auto text-primary-600"
                 fill="none"
@@ -119,22 +102,27 @@ export function DashboardPage() {
               <span className="mt-2 block text-sm font-medium text-gray-900">
                 Budgets
               </span>
-            </button>
+            </Link>
           </div>
         </div>
 
         {/* Recent Transactions */}
         <div className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Recent Transactions
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Recent Transactions
+            </h2>
+            <Link to="/transactions" className="text-sm link">
+              View all
+            </Link>
+          </div>
           <div className="card">
             <p className="text-gray-500 text-center py-8">
               No transactions yet. Add your first transaction to get started!
             </p>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </Layout>
   );
 }

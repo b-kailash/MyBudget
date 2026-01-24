@@ -4,6 +4,10 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { AccountsPage } from '@/pages/AccountsPage';
+import { CategoriesPage } from '@/pages/CategoriesPage';
+import { TransactionsPage } from '@/pages/TransactionsPage';
+import { BudgetsPage } from '@/pages/BudgetsPage';
 
 function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -34,6 +38,38 @@ function App() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/accounts"
+        element={
+          <ProtectedRoute>
+            <AccountsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/categories"
+        element={
+          <ProtectedRoute>
+            <CategoriesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/transactions"
+        element={
+          <ProtectedRoute>
+            <TransactionsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/budgets"
+        element={
+          <ProtectedRoute>
+            <BudgetsPage />
           </ProtectedRoute>
         }
       />

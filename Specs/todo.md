@@ -180,16 +180,16 @@ npm run dev --workspace=apps/backend
 - [x] 35. Implement register page (creates new family).
 - [x] 36. Implement protected route wrapper.
 
-### Phase 2B – Core Pages
+### Phase 2B – Core Pages ✅
 
 - [x] 37. Implement dashboard page with placeholder widgets.
-- [ ] 38. Implement accounts list page.
-- [ ] 39. Implement account create/edit modal or page.
-- [ ] 40. Implement categories list page (with tree view for subcategories).
-- [ ] 41. Implement category create/edit form.
-- [ ] 42. Implement budgets configuration page.
-- [ ] 43. Implement transactions list page with filters.
-- [ ] 44. Implement transaction create/edit form.
+- [x] 38. Implement accounts list page.
+- [x] 39. Implement account create/edit modal or page.
+- [x] 40. Implement categories list page (with tree view for subcategories).
+- [x] 41. Implement category create/edit form.
+- [x] 42. Implement budgets configuration page.
+- [x] 43. Implement transactions list page with filters.
+- [x] 44. Implement transaction create/edit form.
 
 ### Phase 2C – Dashboard & Reports
 
