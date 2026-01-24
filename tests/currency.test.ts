@@ -22,17 +22,10 @@ import {
     console.log(JSON.stringify(logObject, null, 2));
 };
 
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-  
-  describe('Currency Utilities', () => {
+describe('Currency Utilities', () => {
     beforeAll(() => {
       log('info', '--- Testing Currency Utilities ---', 'currency.test.ts');
     });
-
-    afterEach(async () => {
-        log('info', 'Pausing for 1 minute to respect rate limiting (if applicable).', 'currency.test.ts');
-        await delay(60000);
-      });
   
     describe('formatCurrency', () => {
       it('should format a number as USD currency', () => {

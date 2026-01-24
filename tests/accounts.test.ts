@@ -1,46 +1,23 @@
 import axios from 'axios';
+import {
+  API_URL,
+  AUTH_URL,
+  log,
+  createTestUser,
+  extractErrorDetails,
+  delay,
+  RATE_LIMIT_DELAY_MS,
+} from './utils/testUtils';
 
-if (!process.env.BASE_URL) {
-  throw new Error('BASE_URL environment variable is not set. Please create a .env file in the tests directory.');
-}
-
-const API_URL = `${process.env.BASE_URL}/api/v1`;
-const AUTH_URL = `${API_URL}/auth`;
+const TEST_FILE = 'accounts.test.ts';
 const ACCOUNTS_URL = `${API_URL}/accounts`;
 
-const uniqueId = new Date().getTime();
-const testUser = {
-  email: `account_test_${uniqueId}@example.com`,
-  password: 'Password123!',
-  name: 'Account Test User',
-  familyName: 'Account Test Family',
-};
-
+const testUser = createTestUser('account_test');
 let accessToken: string;
-
-const log = (level: 'info' | 'error' | 'warning', message: string, testScriptFile: string, data?: any) => {
-    const logObject: any = {
-        level,
-        timestamp: new Date().toISOString(),
-        "Test Script File": testScriptFile,
-        message,
-    };
-
-    if (data?.inputParameters) {
-        logObject["Input Parameters"] = data.inputParameters;
-    }
-    if (data?.data) {
-        logObject["data"] = data.data;
-    }
-
-    console.log(JSON.stringify(logObject, null, 2));
-};
-
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 // Helper to get a valid auth token before running tests
 beforeAll(async () => {
-    log('info', '--- PRE-TEST: Authenticating user to get access token ---', 'accounts.test.ts');
+  log('info', '--- PRE-TEST: Authenticating user to get access token ---', TEST_FILE);
   try {
     // Register a new user for this test suite
     await axios.post(`${AUTH_URL}/register`, testUser);
@@ -51,14 +28,15 @@ beforeAll(async () => {
       password: testUser.password,
     });
     accessToken = response.data.data.accessToken;
-    log('info', 'Authentication successful.', 'accounts.test.ts');
-  } catch (error: any) {
-    log('error', 'Authentication pre-test failed.', 'accounts.test.ts', {
-        data: {
-            errorMessage: error.response?.data?.error?.message || error.message,
-            statusCode: error.response?.status,
-        }
-      });
+    log('info', 'Authentication successful.', TEST_FILE);
+  } catch (error: unknown) {
+    const details = extractErrorDetails(error);
+    log('error', 'Authentication pre-test failed.', TEST_FILE, {
+      data: {
+        errorMessage: details.message,
+        statusCode: details.statusCode,
+      },
+    });
     // If auth fails, we cannot run the tests
     throw new Error('Could not authenticate to run accounts tests.');
   }
@@ -74,19 +52,14 @@ describe('Accounts API', () => {
     openingBalance: 1000,
   };
 
-  afterEach(async () => {
-    log('info', 'Pausing for 1 minute to respect rate limiting.', 'accounts.test.ts');
-    await delay(60000);
-  });
-
   // Test creating a new account
   test('POST /accounts - should create a new account for the family', async () => {
-    log('info', '--- Starting Test: POST /accounts - should create a new account for the family ---', 'accounts.test.ts', {
-        inputParameters: {
-            endpoint: ACCOUNTS_URL,
-            account: testAccount,
-        }
-      });
+    log('info', '--- Starting Test: POST /accounts - should create a new account ---', TEST_FILE, {
+      inputParameters: {
+        endpoint: ACCOUNTS_URL,
+        account: testAccount,
+      },
+    });
     try {
       const response = await axios.post(ACCOUNTS_URL, testAccount, {
         headers: {
@@ -98,15 +71,116 @@ describe('Accounts API', () => {
       expect(response.data.data.name).toBe(testAccount.name);
       expect(response.data.data.id).toBeDefined();
       newAccountId = response.data.data.id;
-      log('info', 'Pass: Account creation successful.', 'accounts.test.ts');
-    } catch (error: any) {
-        log('error', 'Fail: Account creation test failed.', 'accounts.test.ts', {
-            data: {
-                errorMessage: error.response?.data?.error?.message || error.message,
-                statusCode: error.response?.status,
-            }
-          });
+      log('info', 'Pass: Account creation successful.', TEST_FILE);
+    } catch (error: unknown) {
+      const details = extractErrorDetails(error);
+      log('error', 'Fail: Account creation test failed.', TEST_FILE, {
+        data: {
+          errorMessage: details.message,
+          statusCode: details.statusCode,
+        },
+      });
       throw error;
     }
+  });
+
+  // Test listing accounts
+  test('GET /accounts - should list all family accounts', async () => {
+    log('info', '--- Starting Test: GET /accounts - should list all accounts ---', TEST_FILE, {
+      inputParameters: {
+        endpoint: ACCOUNTS_URL,
+      },
+    });
+    try {
+      const response = await axios.get(ACCOUNTS_URL, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.data.data)).toBe(true);
+      expect(response.data.data.length).toBeGreaterThan(0);
+      log('info', 'Pass: Account listing successful.', TEST_FILE, {
+        data: { count: response.data.data.length },
+      });
+    } catch (error: unknown) {
+      const details = extractErrorDetails(error);
+      log('error', 'Fail: Account listing test failed.', TEST_FILE, {
+        data: {
+          errorMessage: details.message,
+          statusCode: details.statusCode,
+        },
+      });
+      throw error;
+    }
+  });
+
+  // Test getting a single account
+  test('GET /accounts/:id - should get a specific account', async () => {
+    log('info', '--- Starting Test: GET /accounts/:id - should get specific account ---', TEST_FILE, {
+      inputParameters: {
+        endpoint: `${ACCOUNTS_URL}/${newAccountId}`,
+      },
+    });
+    try {
+      const response = await axios.get(`${ACCOUNTS_URL}/${newAccountId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.data.data.id).toBe(newAccountId);
+      expect(response.data.data.name).toBe(testAccount.name);
+      log('info', 'Pass: Get single account successful.', TEST_FILE);
+    } catch (error: unknown) {
+      const details = extractErrorDetails(error);
+      log('error', 'Fail: Get single account test failed.', TEST_FILE, {
+        data: {
+          errorMessage: details.message,
+          statusCode: details.statusCode,
+        },
+      });
+      throw error;
+    }
+  });
+
+  // Test updating an account
+  test('PUT /accounts/:id - should update an account', async () => {
+    const updateData = { name: 'Updated Checking Account' };
+    log('info', '--- Starting Test: PUT /accounts/:id - should update account ---', TEST_FILE, {
+      inputParameters: {
+        endpoint: `${ACCOUNTS_URL}/${newAccountId}`,
+        updateData,
+      },
+    });
+    try {
+      const response = await axios.put(`${ACCOUNTS_URL}/${newAccountId}`, updateData, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.data.data.name).toBe(updateData.name);
+      log('info', 'Pass: Account update successful.', TEST_FILE);
+    } catch (error: unknown) {
+      const details = extractErrorDetails(error);
+      log('error', 'Fail: Account update test failed.', TEST_FILE, {
+        data: {
+          errorMessage: details.message,
+          statusCode: details.statusCode,
+        },
+      });
+      throw error;
+    }
+  });
+
+  // Rate limit delay after test suite
+  afterAll(async () => {
+    log('info', 'Test suite complete. Waiting 90 seconds for rate limit cooldown...', TEST_FILE);
+    await delay(RATE_LIMIT_DELAY_MS);
+    log('info', 'Rate limit cooldown complete.', TEST_FILE);
   });
 });

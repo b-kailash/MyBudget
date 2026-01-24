@@ -71,11 +71,6 @@ describe('Middleware Tests', () => {
         jest.clearAllMocks();
     });
 
-    afterEach(async () => {
-        log('info', 'Pausing for 1 minute to respect rate limiting (if applicable).', 'middleware.test.ts');
-        await delay(60000);
-    });
-
     describe('Authentication Middleware', () => {
         const testPayload = { userId: 'user1', familyId: 'fam1', role: 'MEMBER' as UserRole };
 

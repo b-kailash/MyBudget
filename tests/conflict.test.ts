@@ -32,8 +32,6 @@ const log = (level: 'info' | 'error' | 'warning', message: string, testScriptFil
     console.log(JSON.stringify(logObject, null, 2));
 };
 
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
 describe('Conflict API Tests', () => {
   // First, register the user successfully.
   beforeAll(async () => {
@@ -55,11 +53,6 @@ describe('Conflict API Tests', () => {
           });
       throw error; // Fail the entire suite if setup fails
     }
-  });
-
-  afterEach(async () => {
-    log('info', 'Pausing for 1 minute to respect rate limiting.', 'conflict.test.ts');
-    await delay(60000);
   });
 
   // This test attempts to register the exact same user again, expecting a conflict.

@@ -25,17 +25,10 @@ import {
     console.log(JSON.stringify(logObject, null, 2));
 };
 
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-  
-  describe('Date Utilities', () => {
+describe('Date Utilities', () => {
     beforeAll(() => {
       log('info', '--- Testing Date Utilities ---', 'date.test.ts');
     });
-
-    afterEach(async () => {
-        log('info', 'Pausing for 1 minute to respect rate limiting (if applicable).', 'date.test.ts');
-        await delay(60000);
-      });
   
     describe('formatDate', () => {
       it('should format a Date object into a yyyy-MM-dd string', () => {

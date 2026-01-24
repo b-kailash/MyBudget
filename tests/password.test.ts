@@ -19,18 +19,11 @@ const log = (level: 'info' | 'error' | 'warning', message: string, testScriptFil
     console.log(JSON.stringify(logObject, null, 2));
 };
 
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
 describe('password utilities', () => {
   const plainPassword = 'mySecretPassword123!';
 
   beforeAll(() => {
     log('info', '--- Testing Password Utilities ---', 'password.test.ts');
-  });
-
-  afterEach(async () => {
-    log('info', 'Pausing for 1 minute to respect rate limiting (if applicable).', 'password.test.ts');
-    await delay(60000);
   });
 
   it('should correctly hash a password', async () => {

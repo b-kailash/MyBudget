@@ -27,8 +27,6 @@ const log = (level: 'info' | 'error' | 'warning', message: string, testScriptFil
     console.log(JSON.stringify(logObject, null, 2));
 };
 
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
 describe('JWT utilities', () => {
   const userId = 'user-123';
   const familyId = 'family-456';
@@ -40,11 +38,6 @@ describe('JWT utilities', () => {
       log('error', 'JWT secrets are not defined in the environment. Skipping tests.', 'jwt.test.ts');
       throw new Error('JWT secrets are not defined. Please create a .env file with JWT_SECRET and REFRESH_TOKEN_SECRET.');
     }
-  });
-
-  afterEach(async () => {
-    log('info', 'Pausing for 1 minute to respect rate limiting (if applicable).', 'jwt.test.ts');
-    await delay(60000);
   });
 
   describe('generateAccessToken and verifyAccessToken', () => {
