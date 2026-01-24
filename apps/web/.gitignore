@@ -1,0 +1,8 @@
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Generated declaration files for vite config
+vite.config.d.ts
+vite.config.d.ts.map
+vite.config.js

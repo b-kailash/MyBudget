@@ -170,19 +170,19 @@ npm run dev --workspace=apps/backend
 
 ## Phase 2 – Web Frontend (React)
 
-### Phase 2A – Setup & Auth
+### Phase 2A – Setup & Auth ✅
 
-- [ ] 30. Create `/apps/web` with Vite + React + TypeScript.
-- [ ] 31. Configure React Router, React Query, and Tailwind CSS.
-- [ ] 32. Create API client using shared package types.
-- [ ] 33. Implement auth context/provider with token storage.
-- [ ] 34. Implement login page.
-- [ ] 35. Implement register page (creates new family).
-- [ ] 36. Implement protected route wrapper.
+- [x] 30. Create `/apps/web` with Vite + React + TypeScript.
+- [x] 31. Configure React Router, React Query, and Tailwind CSS.
+- [x] 32. Create API client using shared package types.
+- [x] 33. Implement auth context/provider with token storage.
+- [x] 34. Implement login page.
+- [x] 35. Implement register page (creates new family).
+- [x] 36. Implement protected route wrapper.
 
 ### Phase 2B – Core Pages
 
-- [ ] 37. Implement dashboard page with placeholder widgets.
+- [x] 37. Implement dashboard page with placeholder widgets.
 - [ ] 38. Implement accounts list page.
 - [ ] 39. Implement account create/edit modal or page.
 - [ ] 40. Implement categories list page (with tree view for subcategories).
