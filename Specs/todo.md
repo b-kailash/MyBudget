@@ -12,7 +12,6 @@ Track progress by marking items with `[x]` when complete.
 2. Read `Specs/Specs.md` for full specification
 3. Check git status: `git status && git log --oneline -5`
 4. **Recommended Next Tasks (Priority Order):**
-   - **Phase 1F** - Integration Testing (items 27-28)
    - **Phase 2** - Web Frontend
    - **Phase 3** - Backend Reports & Dashboard APIs
 
@@ -131,12 +130,13 @@ npm run dev --workspace=apps/backend
   - `PUT /api/v1/transactions/:id` - Update transaction (own transactions for members)
   - `DELETE /api/v1/transactions/:id` - Soft delete transaction
 
-### Phase 1F – Basic Testing & Validation
+### Phase 1F – Basic Testing & Validation ✅
 
 - [x] 26. Write unit tests for auth utilities (password hashing, JWT).
-- [ ] 27. Write integration tests for auth endpoints.
-- [ ] 28. Write integration tests for CRUD endpoints (accounts, categories, transactions).
+- [x] 27. Write integration tests for auth endpoints.
+- [x] 28. Write integration tests for CRUD endpoints (accounts, categories, transactions).
 - [x] 29. Add npm scripts: `test`, `test:watch`, `test:coverage`.
+- [x] 30. Create comprehensive testing guide and test runner script.
 
 ---
 

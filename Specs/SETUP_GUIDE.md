@@ -203,13 +203,16 @@ You can use an API client like Postman, Insomnia, or `curl` to interact with the
 
 ---
 
-## Running Tests
+## Running the Automated Tests
 
-To run the backend unit tests:
+A comprehensive test suite is located in the `/tests` directory. For detailed instructions on how to set up the test environment and run the tests, please refer to the **[Backend Testing Guide](TESTING_GUIDE.md)**.
 
+To run the tests, you will typically execute the following commands from the project root:
 ```bash
-npm run test --workspace=apps/backend
+cd tests
+./run_all_tests.sh
 ```
+Make sure you have configured the `.env` file in the `tests` directory as described in the testing guide.
 
 ---
 
@@ -290,7 +293,7 @@ npm run build --workspace=packages/shared
 | Start database (v1) | `docker-compose -f docker-compose.dev.yml up -d` |
 | Run migrations | `npm run prisma:migrate --workspace=apps/backend` |
 | Start backend | `npm run dev --workspace=apps/backend` |
-| Run tests | `npm run test --workspace=apps/backend` |
+| Run tests | `cd tests && ./run_all_tests.sh` |
 | Stop database (v2) | `docker compose -f docker-compose.dev.yml down` |
 | Stop database (v1) | `docker-compose -f docker-compose.dev.yml down` |
 

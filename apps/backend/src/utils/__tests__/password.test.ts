@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { hashPassword, verifyPassword } from '../password.js';
+import { hashPassword, verifyPassword } from '../../utils/password.js';
 
 describe('password utilities', () => {
   const plainPassword = 'mySecretPassword123!';

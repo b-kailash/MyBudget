@@ -74,3 +74,14 @@ npm run dev --workspace=apps/backend
 ```
 
 The backend server should now be running, typically accessible at `http://localhost:3000` (check the output in your terminal for the exact port). You can now use an API client to interact with the endpoints defined in `Specs.md` and implemented in Phases 1D and 1E.
+
+## 6. Running the Automated Tests
+
+A comprehensive test suite is located in the `/tests` directory. For detailed instructions on how to set up the test environment and run the tests, please refer to the **[Backend Testing Guide](TESTING_GUIDE.md)**.
+
+To run the tests, you will typically execute the following commands from the project root:
+```bash
+cd tests
+./run_all_tests.sh
+```
+Make sure you have configured the `.env` file in the `tests` directory as described in the testing guide.

@@ -4,7 +4,7 @@ import {
   verifyAccessToken,
   generateRefreshToken,
   hashRefreshToken,
-} from '../jwt.js';
+} from '../../utils/jwt.js';
 
 // Environment variables are set in jest.setup.ts
 
@@ -41,7 +41,7 @@ describe('JWT utilities', () => {
     it('should return null for a malformed token', () => {
       // Test with a token that has valid JWT format but wrong signature
       const malformedToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0IiwiZmFtaWx5SWQiOiJ0ZXN0Iiwicm9sZSI6Im1lbWJlciIsImlhdCI6MTYwMDAwMDAwMH0.invalidsignature';
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0IiwiZmFtaWx5SWQiOiJ0ZXN0Iiwicm9sZSI6Im1lbWJlciIsImi';
       const payload = verifyAccessToken(malformedToken);
       expect(payload).toBeNull();
     });
