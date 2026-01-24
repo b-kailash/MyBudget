@@ -14,54 +14,77 @@ const testUser = {
   familyName: 'Conflict Family',
 };
 
-const log = (level: 'info' | 'error', message: string, data?: any) => {
-    const logObject = {
-      level,
-      timestamp: new Date().toISOString(),
-      message,
-      data,
+const log = (level: 'info' | 'error' | 'warning', message: string, testScriptFile: string, data?: any) => {
+    const logObject: any = {
+        level,
+        timestamp: new Date().toISOString(),
+        "Test Script File": testScriptFile,
+        message,
     };
+
+    if (data?.inputParameters) {
+        logObject["Input Parameters"] = data.inputParameters;
+    }
+    if (data?.data) {
+        logObject["data"] = data.data;
+    }
+
     console.log(JSON.stringify(logObject, null, 2));
-  };
+};
+
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 describe('Conflict API Tests', () => {
   // First, register the user successfully.
   beforeAll(async () => {
-    log('info', '--- PRE-TEST: Registering a new user to set up the conflict scenario ---', {
-      input: testUser,
+    log('info', '--- PRE-TEST: Registering a new user to set up the conflict scenario ---', 'conflict.test.ts', {
+      inputParameters: {
+        user: testUser,
+      }
     });
     try {
       const response = await axios.post(`${AUTH_URL}/register`, testUser);
       expect(response.status).toBe(201);
-      log('info', 'User registered successfully for conflict test.');
+      log('info', 'User registered successfully for conflict test.', 'conflict.test.ts');
     } catch (error: any) {
-        log('error', 'Pre-test user registration failed unexpectedly.', {
-            errorMessage: error.response?.data?.error?.message || error.message,
-            statusCode: error.response?.status,
+        log('error', 'Pre-test user registration failed unexpectedly.', 'conflict.test.ts', {
+            data: {
+                errorMessage: error.response?.data?.error?.message || error.message,
+                statusCode: error.response?.status,
+            }
           });
       throw error; // Fail the entire suite if setup fails
     }
   });
 
+  afterEach(async () => {
+    log('info', 'Pausing for 1 minute to respect rate limiting.', 'conflict.test.ts');
+    await delay(60000);
+  });
+
   // This test attempts to register the exact same user again, expecting a conflict.
   test('POST /register - should fail with a 409 Conflict when creating a user that already exists', async () => {
-    log('info', '--- Starting Test: POST /register for a user that already exists ---', {
-      endpoint: `${AUTH_URL}/register`,
-      input: testUser,
-      initialCondition: 'User with this email already exists',
+    log('info', '--- Starting Test: POST /register for a user that already exists ---', 'conflict.test.ts', {
+        inputParameters: {
+            endpoint: `${AUTH_URL}/register`,
+            user: testUser,
+            initialCondition: 'User with this email already exists',
+        }
     });
     try {
       await axios.post(`${AUTH_URL}/register`, testUser);
-      log('error', 'Fail: User registration for an existing user succeeded unexpectedly.');
+      log('error', 'Fail: User registration for an existing user succeeded unexpectedly.', 'conflict.test.ts');
       throw new Error('User registration for an existing user succeeded unexpectedly.');
     } catch (error: any) {
       if (error.response) {
         expect(error.response.status).toBe(409);
         expect(error.response.data.error.code).toBe('USER_EXISTS');
-        log('info', 'Pass: Successfully received a 409 Conflict as expected.');
+        log('info', 'Pass: Successfully received a 409 Conflict as expected.', 'conflict.test.ts');
       } else {
-        log('error', 'Fail: Request to register duplicate user failed without a response.', {
-            errorMessage: error.message,
+        log('error', 'Fail: Request to register duplicate user failed without a response.', 'conflict.test.ts', {
+            data: {
+                errorMessage: error.message,
+            }
           });
         throw error;
       }

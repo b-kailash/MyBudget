@@ -21,22 +21,32 @@ const testUser = {
 let accessToken: string;
 let parentCategoryId: string;
 
-const log = (level: 'info' | 'error', message: string, data?: any) => {
-    const logObject = {
-      level,
-      timestamp: new Date().toISOString(),
-      message,
-      data,
+const log = (level: 'info' | 'error' | 'warning', message: string, testScriptFile: string, data?: any) => {
+    const logObject: any = {
+        level,
+        timestamp: new Date().toISOString(),
+        "Test Script File": testScriptFile,
+        message,
     };
+
+    if (data?.inputParameters) {
+        logObject["Input Parameters"] = data.inputParameters;
+    }
+    if (data?.data) {
+        logObject["data"] = data.data;
+    }
+
     console.log(JSON.stringify(logObject, null, 2));
-  };
+};
+
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 // --- Test Suite ---
 
 describe('Categories API', () => {
   // 1. Register and authenticate a user before starting the tests
   beforeAll(async () => {
-    log('info', '--- PRE-TEST: Registering and authenticating a user ---');
+    log('info', '--- PRE-TEST: Registering and authenticating a user ---', 'categories.test.ts');
     try {
       // Register user
       await axios.post(`${AUTH_URL}/register`, testUser);
@@ -47,14 +57,21 @@ describe('Categories API', () => {
         password: testUser.password,
       });
       accessToken = response.data.data.accessToken;
-      log('info', 'User for category tests authenticated successfully.');
+      log('info', 'User for category tests authenticated successfully.', 'categories.test.ts');
     } catch (error: any) {
-        log('error', 'PRE-TEST FAILED: Could not set up user.', {
-            errorMessage: error.response?.data?.error?.message || error.message,
-            statusCode: error.response?.status,
+        log('error', 'PRE-TEST FAILED: Could not set up user.', 'categories.test.ts', {
+            data: {
+                errorMessage: error.response?.data?.error?.message || error.message,
+                statusCode: error.response?.status,
+            }
           });
       throw error;
     }
+  });
+
+  afterEach(async () => {
+    log('info', 'Pausing for 1 minute to respect rate limiting.', 'categories.test.ts');
+    await delay(60000);
   });
 
   // 2. Create a new parent category
@@ -65,9 +82,11 @@ describe('Categories API', () => {
         color: '#FF5733',
         icon: 'shopping_cart',
       };
-    log('info', '--- Starting Test: POST /categories for a parent category ---', {
-        endpoint: CATEGORIES_URL,
-        input: parentCategory,
+    log('info', '--- Starting Test: POST /categories for a parent category ---', 'categories.test.ts', {
+        inputParameters: {
+            endpoint: CATEGORIES_URL,
+            category: parentCategory,
+        }
       });
     try {
       const response = await axios.post(CATEGORIES_URL, parentCategory, {
@@ -78,11 +97,13 @@ describe('Categories API', () => {
       expect(response.data.data.name).toBe(parentCategory.name);
       expect(response.data.data.parentId).toBeNull();
       parentCategoryId = response.data.data.id; // Save for sub-category test
-      log('info', 'Pass: Parent category created successfully.');
+      log('info', 'Pass: Parent category created successfully.', 'categories.test.ts');
     } catch (error: any) {
-        log('error', 'Fail: Failed to create parent category.', {
-            errorMessage: error.response?.data?.error?.message || error.message,
-            statusCode: error.response?.status,
+        log('error', 'Fail: Failed to create parent category.', 'categories.test.ts', {
+            data: {
+                errorMessage: error.response?.data?.error?.message || error.message,
+                statusCode: error.response?.status,
+            }
           });
       throw error;
     }

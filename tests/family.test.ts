@@ -25,22 +25,32 @@ let adminAccessToken: string;
 let invitationId: string;
 let familyMemberId: string;
 
-const log = (level: 'info' | 'error', message: string, data?: any) => {
-    const logObject = {
-      level,
-      timestamp: new Date().toISOString(),
-      message,
-      data,
+const log = (level: 'info' | 'error' | 'warning', message: string, testScriptFile: string, data?: any) => {
+    const logObject: any = {
+        level,
+        timestamp: new Date().toISOString(),
+        "Test Script File": testScriptFile,
+        message,
     };
+
+    if (data?.inputParameters) {
+        logObject["Input Parameters"] = data.inputParameters;
+    }
+    if (data?.data) {
+        logObject["data"] = data.data;
+    }
+
     console.log(JSON.stringify(logObject, null, 2));
-  };
+};
+
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 // --- Test Suite ---
 
 describe('Family Management API', () => {
   // 1. Register the admin user and get their token before starting the tests
   beforeAll(async () => {
-    log('info', '--- PRE-TEST: Registering and authenticating the Family Admin ---');
+    log('info', '--- PRE-TEST: Registering and authenticating the Family Admin ---', 'family.test.ts');
     try {
       // Register the admin user
       await axios.post(`${AUTH_URL}/register`, adminUser);
@@ -51,14 +61,21 @@ describe('Family Management API', () => {
         password: adminUser.password,
       });
       adminAccessToken = response.data.data.accessToken;
-      log('info', 'Family Admin authenticated successfully.');
+      log('info', 'Family Admin authenticated successfully.', 'family.test.ts');
     } catch (error: any) {
-        log('error', 'PRE-TEST FAILED: Could not set up admin user.', {
-            errorMessage: error.response?.data?.error?.message || error.message,
-            statusCode: error.response?.status,
+        log('error', 'PRE-TEST FAILED: Could not set up admin user.', 'family.test.ts', {
+            data: {
+                errorMessage: error.response?.data?.error?.message || error.message,
+                statusCode: error.response?.status,
+            }
           });
       throw error;
     }
+  });
+
+  afterEach(async () => {
+    log('info', 'Pausing for 1 minute to respect rate limiting.', 'family.test.ts');
+    await delay(60000);
   });
 
   // 2. Test inviting a new member to the family
@@ -67,9 +84,11 @@ describe('Family Management API', () => {
         email: invitedUserEmail,
         role: 'MEMBER',
       };
-    log('info', '--- Starting Test: POST /family/invite ---', {
-        endpoint: `${FAMILY_URL}/invite`,
-        input: invitationPayload,
+    log('info', '--- Starting Test: POST /family/invite ---', 'family.test.ts', {
+        inputParameters: {
+            endpoint: `${FAMILY_URL}/invite`,
+            invitation: invitationPayload,
+        }
       });
     try {
       const response = await axios.post(`${FAMILY_URL}/invite`, invitationPayload, {
@@ -80,11 +99,13 @@ describe('Family Management API', () => {
       expect(response.data.data.email).toBe(invitedUserEmail);
       expect(response.data.data.id).toBeDefined();
       invitationId = response.data.data.id; // Save for later tests
-      log('info', 'Pass: Successfully created invitation.');
+      log('info', 'Pass: Successfully created invitation.', 'family.test.ts');
     } catch (error: any) {
-        log('error', 'Fail: Failed to invite user.', {
-            errorMessage: error.response?.data?.error?.message || error.message,
-            statusCode: error.response?.status,
+        log('error', 'Fail: Failed to invite user.', 'family.test.ts', {
+            data: {
+                errorMessage: error.response?.data?.error?.message || error.message,
+                statusCode: error.response?.status,
+            }
           });
       throw error;
     }

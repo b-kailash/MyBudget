@@ -25,22 +25,32 @@ let categoryId: string;
 let accountId: string;
 let budgetId: string;
 
-const log = (level: 'info' | 'error', message: string, data?: any) => {
-    const logObject = {
-      level,
-      timestamp: new Date().toISOString(),
-      message,
-      data,
+const log = (level: 'info' | 'error' | 'warning', message: string, testScriptFile: string, data?: any) => {
+    const logObject: any = {
+        level,
+        timestamp: new Date().toISOString(),
+        "Test Script File": testScriptFile,
+        message,
     };
+
+    if (data?.inputParameters) {
+        logObject["Input Parameters"] = data.inputParameters;
+    }
+    if (data?.data) {
+        logObject["data"] = data.data;
+    }
+
     console.log(JSON.stringify(logObject, null, 2));
-  };
+};
+
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 // --- Test Suite ---
 
 describe('Budgets API', () => {
   // 1. Set up a user, a category, and an account before starting the tests
   beforeAll(async () => {
-    log('info', '--- PRE-TEST: Setting up user, category, and account ---');
+    log('info', '--- PRE-TEST: Setting up user, category, and account ---', 'budgets.test.ts');
     try {
       // Register and login user
       await axios.post(`${AUTH_URL}/register`, testUser);
@@ -49,7 +59,7 @@ describe('Budgets API', () => {
         password: testUser.password,
       });
       accessToken = loginResponse.data.data.accessToken;
-      log('info', 'User authenticated.');
+      log('info', 'User authenticated.', 'budgets.test.ts');
 
       // Create a category
       const categoryPayload = { name: 'Transport', type: 'EXPENSE' };
@@ -57,7 +67,7 @@ describe('Budgets API', () => {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       categoryId = categoryResponse.data.data.id;
-      log('info', 'Category created.');
+      log('info', 'Category created.', 'budgets.test.ts');
 
       // Create an account
       const accountPayload = { name: 'Main Bank', type: 'BANK', currency: 'USD', openingBalance: 5000 };
@@ -65,15 +75,22 @@ describe('Budgets API', () => {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       accountId = accountResponse.data.data.id;
-      log('info', 'Account created.');
+      log('info', 'Account created.', 'budgets.test.ts');
 
     } catch (error: any) {
-      log('error', 'PRE-TEST FAILED: Could not set up required resources.', {
-        errorMessage: error.response?.data?.error?.message || error.message,
-        statusCode: error.response?.status,
+      log('error', 'PRE-TEST FAILED: Could not set up required resources.', 'budgets.test.ts', {
+        data: {
+            errorMessage: error.response?.data?.error?.message || error.message,
+            statusCode: error.response?.status,
+        }
       });
       throw error;
     }
+  });
+
+  afterEach(async () => {
+    log('info', 'Pausing for 1 minute to respect rate limiting.', 'budgets.test.ts');
+    await delay(60000);
   });
 
   // 2. Create a new budget for the category
@@ -84,9 +101,11 @@ describe('Budgets API', () => {
         periodType: 'MONTHLY',
         startDate: new Date().toISOString(),
       };
-    log('info', '--- Starting Test: POST /budgets ---', {
-        endpoint: BUDGETS_URL,
-        input: budgetPayload,
+    log('info', '--- Starting Test: POST /budgets ---', 'budgets.test.ts', {
+        inputParameters: {
+            endpoint: BUDGETS_URL,
+            budget: budgetPayload,
+        }
       });
     try {
       const response = await axios.post(BUDGETS_URL, budgetPayload, {
@@ -97,11 +116,13 @@ describe('Budgets API', () => {
       expect(response.data.data.amount).toBe(budgetPayload.amount);
       expect(response.data.data.categoryId).toBe(categoryId);
       budgetId = response.data.data.id;
-      log('info', 'Pass: Budget created successfully.');
+      log('info', 'Pass: Budget created successfully.', 'budgets.test.ts');
     } catch (error: any) {
-        log('error', 'Fail: Failed to create budget.', {
-            errorMessage: error.response?.data?.error?.message || error.message,
-            statusCode: error.response?.status,
+        log('error', 'Fail: Failed to create budget.', 'budgets.test.ts', {
+            data: {
+                errorMessage: error.response?.data?.error?.message || error.message,
+                statusCode: error.response?.status,
+            }
           });
       throw error;
     }
