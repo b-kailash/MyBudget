@@ -35,21 +35,21 @@
       "type": "BANK",
       "currency": "EUR",
       "openingBalance": 2500.00,
-      "transactionCount": "~110"
+      "transactionCount": "~160"
     },
     {
       "name": "Bank of Ireland Savings",
       "type": "SAVINGS",
       "currency": "EUR",
       "openingBalance": 15000.00,
-      "transactionCount": "~105"
+      "transactionCount": "~155"
     },
     {
       "name": "Revolut Card",
       "type": "CARD",
       "currency": "EUR",
       "openingBalance": 500.00,
-      "transactionCount": "~105"
+      "transactionCount": "~155"
     }
   ],
   "categories": {
@@ -102,18 +102,21 @@
   },
   "transactionDistribution": {
     "currentAccount": {
-      "income": 35,
-      "expense": 75,
+      "income": 50,
+      "expense": 110,
+      "total": 160,
       "description": "Balanced mix of income and expenses"
     },
     "savingsAccount": {
-      "income": 80,
-      "expense": 25,
-      "description": "Mostly deposits, few withdrawals"
+      "income": 100,
+      "expense": 55,
+      "total": 155,
+      "description": "Mostly deposits, some withdrawals"
     },
     "cardAccount": {
-      "income": 10,
-      "expense": 95,
+      "income": 15,
+      "expense": 140,
+      "total": 155,
       "description": "Mostly expenses, occasional refunds"
     }
   },

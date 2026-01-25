@@ -8,12 +8,12 @@ Track progress by marking items with `[x]` when complete.
 
 **To resume development in a new session:**
 
-1. Read this file (`Specs/todo.md`) to see current progress
-2. Read `Specs/Specs.md` for full specification
+1. Read this file (`Docs/TODO.md`) to see current progress
+2. Read `Docs/SPEC.md` for full specification
 3. Check git status: `git status && git log --oneline -5`
 4. **Recommended Next Tasks (Priority Order):**
-   - **Phase 2C** - Dashboard & Reports UI (tasks 45-50)
-   - **Phase 3** - Wire web frontend to new report APIs (task 55)
+   - **Phase 3A** - Transaction Import (file parsers, import UI)
+   - **Phase 4** - Mobile App (React Native)
 
 **Before running the backend:**
 
@@ -191,14 +191,14 @@ npm run dev --workspace=apps/backend
 - [x] 43. Implement transactions list page with filters.
 - [x] 44. Implement transaction create/edit form.
 
-### Phase 2C – Dashboard & Reports
+### Phase 2C – Dashboard & Reports ✅
 
-- [ ] 45. Implement dashboard summary cards (income, expenses, net savings).
-- [ ] 46. Implement recent transactions widget.
-- [ ] 47. Implement spending by category chart.
-- [ ] 48. Implement basic reporting page with date range filter.
-- [ ] 49. Implement category breakdown report.
-- [ ] 50. Implement month-over-month trend chart.
+- [x] 45. Implement dashboard summary cards (income, expenses, net savings).
+- [x] 46. Implement recent transactions widget.
+- [x] 47. Implement spending by category chart.
+- [x] 48. Implement basic reporting page with date range filter.
+- [x] 49. Implement category breakdown report.
+- [x] 50. Implement month-over-month trend chart.
 
 ---
 
@@ -208,7 +208,7 @@ npm run dev --workspace=apps/backend
 - [x] 52. Implement `/api/v1/reports/category-breakdown` endpoint.
 - [x] 53. Implement `/api/v1/reports/trend` endpoint (month-over-month).
 - [x] 54. Implement `/api/v1/dashboard` endpoint (aggregated data for dashboard widgets).
-- [ ] 55. Wire web frontend reports to new endpoints.
+- [x] 55. Wire web frontend reports to new endpoints.
 
 ---
 

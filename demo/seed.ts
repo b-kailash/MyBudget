@@ -2,7 +2,7 @@
  * Demo Data Seed Script
  *
  * Creates a demo family with 4 members, 3 bank accounts,
- * and 100+ transactions per account.
+ * and 150+ transactions per account.
  *
  * Run with: npx ts-node demo/seed.ts
  * Or from backend: npm run seed:demo
@@ -245,21 +245,22 @@ async function createTransactionsForAccount(
   const monthsOfData = 12; // Generate 12 months of data
 
   // Determine transaction distribution based on account type
+  // Target: at least 150 transactions per account
   let incomeCount = 0;
   let expenseCount = 0;
 
   if (account.type === AccountType.SAVINGS) {
-    // Savings: mostly income (deposits), few expenses (withdrawals)
-    incomeCount = 80;
-    expenseCount = 25;
+    // Savings: mostly income (deposits), some expenses (withdrawals)
+    incomeCount = 100;
+    expenseCount = 55;
   } else if (account.type === AccountType.CARD) {
     // Card: mostly expenses, some income (refunds/cashback)
-    incomeCount = 10;
-    expenseCount = 95;
+    incomeCount = 15;
+    expenseCount = 140;
   } else {
     // Current account: balanced mix
-    incomeCount = 35;
-    expenseCount = 75;
+    incomeCount = 50;
+    expenseCount = 110;
   }
 
   // Generate income transactions

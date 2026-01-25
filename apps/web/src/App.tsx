@@ -8,6 +8,8 @@ import { AccountsPage } from '@/pages/AccountsPage';
 import { CategoriesPage } from '@/pages/CategoriesPage';
 import { TransactionsPage } from '@/pages/TransactionsPage';
 import { BudgetsPage } from '@/pages/BudgetsPage';
+import { ReportsPage } from '@/pages/ReportsPage';
+import { ImportPage } from '@/pages/ImportPage';
 
 function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -70,6 +72,22 @@ function App() {
         element={
           <ProtectedRoute>
             <BudgetsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <ReportsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/import"
+        element={
+          <ProtectedRoute>
+            <ImportPage />
           </ProtectedRoute>
         }
       />

@@ -12,5 +12,8 @@ export * from './schemas';
 // Export all utilities
 export * from './utils';
 
+// Export file parsers
+export * from './parsers';
+
 // API client will be exported from here
 // export * from './api';

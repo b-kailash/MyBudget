@@ -47,6 +47,22 @@ enum BudgetPeriodType {
   YEARLY
 }
 
+enum ImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ImportFileType {
+  CSV
+  XLSX
+  XLS
+  OFX
+  QFX
+  QIF
+}
+
 // Models
 model Family {
   id        String   @id @default(uuid())
@@ -61,6 +77,7 @@ model Family {
   transactions Transaction[]
   budgets      Budget[]
   invitations  FamilyInvitation[]
+  importBatches ImportBatch[]
 
   @@map("families")
 }
@@ -84,6 +101,7 @@ model User {
   refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
   sentInvitations     FamilyInvitation[]   @relation("InvitedBy")
+  importBatches       ImportBatch[]
 
   @@index([email])
   @@map("users")
@@ -254,4 +272,29 @@ model FamilyInvitation {
   @@index([tokenHash])
   @@index([familyId])
   @@map("family_invitations")
+}
+
+model ImportBatch {
+  id            String         @id @default(uuid())
+  familyId      String         @map("family_id")
+  userId        String         @map("user_id")
+  filename      String
+  fileType      ImportFileType @map("file_type")
+  status        ImportStatus   @default(PENDING)
+  totalRows     Int            @default(0) @map("total_rows")
+  importedCount Int            @default(0) @map("imported_count")
+  skippedCount  Int            @default(0) @map("skipped_count")
+  errorCount    Int            @default(0) @map("error_count")
+  errorLog      String?        @map("error_log") @db.Text
+  columnMapping Json?          @map("column_mapping")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  completedAt   DateTime?      @map("completed_at")
+
+  // Relations
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([familyId])
+  @@index([userId])
+  @@map("import_batches")
 }

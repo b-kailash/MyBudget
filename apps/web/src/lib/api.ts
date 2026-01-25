@@ -262,6 +262,241 @@ export const api = {
       }),
   },
 
+  // Dashboard & Reports
+  dashboard: {
+    get: () =>
+      request<{
+        summary: {
+          year: number;
+          month: number;
+          totalIncome: number;
+          totalExpenses: number;
+          netSavings: number;
+          totalBalance: number;
+        };
+        recentTransactions: Array<{
+          id: string;
+          type: string;
+          amount: number;
+          currency: string;
+          date: string;
+          payee: string;
+          notes: string | null;
+          account: { id: string; name: string };
+          category: { id: string; name: string; color: string; icon: string | null };
+        }>;
+        topCategories: Array<{
+          categoryId: string;
+          categoryName: string;
+          categoryColor: string;
+          categoryIcon: string | null;
+          amount: number;
+        }>;
+        accounts: Array<{
+          id: string;
+          name: string;
+          type: string;
+          currency: string;
+          balance: number;
+        }>;
+      }>('/dashboard'),
+  },
+
+  reports: {
+    monthlySummary: (params?: { year?: number; month?: number }) => {
+      const searchParams = params ? `?${new URLSearchParams(params as Record<string, string>)}` : '';
+      return request<{
+        year: number;
+        month: number;
+        totalIncome: number;
+        totalExpenses: number;
+        netSavings: number;
+        savingsRate: number;
+        incomeTransactionCount: number;
+        expenseTransactionCount: number;
+      }>(`/reports/monthly-summary${searchParams}`);
+    },
+
+    categoryBreakdown: (params?: { year?: number; month?: number; type?: 'income' | 'expense' }) => {
+      const searchParams = params ? `?${new URLSearchParams(params as Record<string, string>)}` : '';
+      return request<{
+        year: number;
+        month: number;
+        type: string;
+        total: number;
+        breakdown: Array<{
+          categoryId: string;
+          categoryName: string;
+          categoryColor: string;
+          categoryIcon: string | null;
+          amount: number;
+          percentage: number;
+          transactionCount: number;
+        }>;
+      }>(`/reports/category-breakdown${searchParams}`);
+    },
+
+    trend: (params?: { months?: number }) => {
+      const searchParams = params ? `?${new URLSearchParams(params as Record<string, string>)}` : '';
+      return request<{
+        months: Array<{
+          year: number;
+          month: number;
+          income: number;
+          expenses: number;
+          netSavings: number;
+        }>;
+        averages: {
+          income: number;
+          expenses: number;
+          netSavings: number;
+        };
+      }>(`/reports/trend${searchParams}`);
+    },
+  },
+
+  // Import
+  import: {
+    upload: async (file: File) => {
+      const { accessToken } = getStoredTokens();
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_BASE_URL}/import/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      const result: ApiResponse<{
+        importId: string;
+        filename: string;
+        totalRows: number;
+        preview: Array<Record<string, string>>;
+        suggestedMapping: Record<string, string>;
+        headers: string[];
+      }> = await response.json();
+
+      if (result.error) {
+        throw new ApiError(result.error.code, result.error.message, response.status);
+      }
+
+      return result.data!;
+    },
+
+    preview: async (
+      file: File,
+      importId: string,
+      accountId: string,
+      mapping: Record<string, string>,
+      dateFormat?: string
+    ) => {
+      const { accessToken } = getStoredTokens();
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('importId', importId);
+      formData.append('accountId', accountId);
+      formData.append('mapping', JSON.stringify(mapping));
+      if (dateFormat) formData.append('dateFormat', dateFormat);
+
+      const response = await fetch(`${API_BASE_URL}/import/preview`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      const result: ApiResponse<{
+        importId: string;
+        totalRows: number;
+        validRows: number;
+        duplicateRows: number;
+        errorRows: number;
+        rows: Array<{
+          rowNumber: number;
+          date: string | null;
+          amount: number | null;
+          payee: string | null;
+          notes: string | null;
+          isValid: boolean;
+          isDuplicate: boolean;
+          errors: string[];
+        }>;
+      }> = await response.json();
+
+      if (result.error) {
+        throw new ApiError(result.error.code, result.error.message, response.status);
+      }
+
+      return result.data!;
+    },
+
+    commit: async (
+      file: File,
+      accountId: string,
+      mapping: Record<string, string>,
+      options?: {
+        dateFormat?: string;
+        negativeIsExpense?: boolean;
+        skipDuplicates?: boolean;
+        defaultCategoryId?: string;
+      }
+    ) => {
+      const { accessToken } = getStoredTokens();
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('accountId', accountId);
+      formData.append('mapping', JSON.stringify(mapping));
+      if (options?.dateFormat) formData.append('dateFormat', options.dateFormat);
+      if (options?.negativeIsExpense !== undefined)
+        formData.append('negativeIsExpense', String(options.negativeIsExpense));
+      if (options?.skipDuplicates !== undefined)
+        formData.append('skipDuplicates', String(options.skipDuplicates));
+      if (options?.defaultCategoryId) formData.append('defaultCategoryId', options.defaultCategoryId);
+
+      const response = await fetch(`${API_BASE_URL}/import/commit`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      const result: ApiResponse<{
+        importId: string;
+        importedCount: number;
+        skippedCount: number;
+        errorCount: number;
+        message: string;
+      }> = await response.json();
+
+      if (result.error) {
+        throw new ApiError(result.error.code, result.error.message, response.status);
+      }
+
+      return result.data!;
+    },
+
+    history: () =>
+      request<
+        Array<{
+          id: string;
+          filename: string;
+          fileType: string;
+          status: string;
+          totalRows: number;
+          importedCount: number;
+          skippedCount: number;
+          errorCount: number;
+          createdAt: string;
+          completedAt: string | null;
+        }>
+      >('/import/history'),
+  },
+
   // Family
   family: {
     members: () =>

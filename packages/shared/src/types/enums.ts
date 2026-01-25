@@ -69,3 +69,35 @@ export enum BudgetPeriod {
   /** Yearly budget period */
   YEARLY = 'YEARLY',
 }
+
+/**
+ * Import batch status
+ */
+export enum ImportStatus {
+  /** Import is pending processing */
+  PENDING = 'PENDING',
+  /** Import is being processed */
+  PROCESSING = 'PROCESSING',
+  /** Import completed successfully */
+  COMPLETED = 'COMPLETED',
+  /** Import failed */
+  FAILED = 'FAILED',
+}
+
+/**
+ * Supported import file types
+ */
+export enum ImportFileType {
+  /** Comma-separated values */
+  CSV = 'CSV',
+  /** Excel 2007+ format */
+  XLSX = 'XLSX',
+  /** Excel 97-2003 format */
+  XLS = 'XLS',
+  /** Open Financial Exchange format */
+  OFX = 'OFX',
+  /** Quicken Financial Exchange format */
+  QFX = 'QFX',
+  /** Quicken Interchange Format */
+  QIF = 'QIF',
+}
