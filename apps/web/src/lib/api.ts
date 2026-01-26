@@ -224,7 +224,15 @@ export const api = {
   transactions: {
     list: (params?: Record<string, string>) => {
       const searchParams = params ? `?${new URLSearchParams(params)}` : '';
-      return request<unknown[]>(`/transactions${searchParams}`);
+      return request<{
+        items: unknown[];
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      }>(`/transactions${searchParams}`);
     },
     get: (id: string) => request<unknown>(`/transactions/${id}`),
     create: (data: unknown) =>

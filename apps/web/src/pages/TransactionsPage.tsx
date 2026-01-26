@@ -59,7 +59,7 @@ export function TransactionsPage() {
   });
   const queryClient = useQueryClient();
 
-  const { data: transactions, isLoading, error } = useQuery({
+  const { data: transactionsData, isLoading, error } = useQuery({
     queryKey: ['transactions', filters],
     queryFn: () => {
       const params: Record<string, string> = {};
@@ -67,9 +67,11 @@ export function TransactionsPage() {
       if (filters.endDate) params['endDate'] = filters.endDate;
       if (filters.accountId) params['accountId'] = filters.accountId;
       if (filters.categoryId) params['categoryId'] = filters.categoryId;
-      return api.transactions.list(params) as Promise<Transaction[]>;
+      return api.transactions.list(params);
     },
   });
+
+  const transactions = transactionsData?.items as Transaction[] | undefined;
 
   const { data: accounts } = useQuery({
     queryKey: ['accounts'],
