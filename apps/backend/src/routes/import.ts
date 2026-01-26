@@ -1,11 +1,90 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
-import { ApiResponse, ImportStatus, ImportFileType, parseCSV, suggestColumnMapping, applyColumnMapping, TransactionType } from '@mybudget/shared';
+import { ApiResponse, ImportStatus, ImportFileType, parseCSV, parseXLSX, suggestColumnMapping, applyColumnMapping, TransactionType, CSVParseResult } from '@mybudget/shared';
 import { authenticate } from '../middleware/auth.js';
+import { importRateLimiter } from '../middleware/rateLimit.js';
 import { prisma } from '../lib/prisma.js';
 import { Decimal } from '@prisma/client/runtime/library';
 
 const router = Router();
+
+/**
+ * Magic number signatures for file type validation
+ * More secure than relying on extension or MIME type
+ */
+const FILE_SIGNATURES: Record<string, { signature: number[]; offset: number }[]> = {
+  // CSV/text files start with printable ASCII or BOM
+  csv: [
+    { signature: [0xef, 0xbb, 0xbf], offset: 0 }, // UTF-8 BOM
+    { signature: [], offset: 0 }, // Plain text (validated separately)
+  ],
+  // XLSX files are ZIP archives starting with PK
+  xlsx: [{ signature: [0x50, 0x4b, 0x03, 0x04], offset: 0 }],
+  // XLS files (old Excel format) - BIFF8
+  xls: [{ signature: [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1], offset: 0 }],
+  // OFX/QFX are XML-based text files
+  ofx: [{ signature: [], offset: 0 }],
+  qfx: [{ signature: [], offset: 0 }],
+  // QIF is plain text
+  qif: [{ signature: [], offset: 0 }],
+};
+
+/**
+ * Validate file content against magic number signatures
+ */
+function validateMagicNumber(buffer: Buffer, fileType: string): boolean {
+  const signatures = FILE_SIGNATURES[fileType.toLowerCase()];
+  if (!signatures) return false;
+
+  for (const { signature, offset } of signatures) {
+    if (signature.length === 0) {
+      // For text-based formats, verify content is valid UTF-8/ASCII
+      return isValidTextContent(buffer);
+    }
+
+    if (buffer.length < offset + signature.length) continue;
+
+    let matches = true;
+    for (let i = 0; i < signature.length; i++) {
+      if (buffer[offset + i] !== signature[i]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) return true;
+  }
+  return false;
+}
+
+/**
+ * Check if buffer contains valid text content (for CSV, OFX, QIF)
+ */
+function isValidTextContent(buffer: Buffer): boolean {
+  // Check first 1KB for valid text characters
+  const checkLength = Math.min(buffer.length, 1024);
+  for (let i = 0; i < checkLength; i++) {
+    const byte = buffer[i];
+    // Allow printable ASCII (32-126), tabs (9), newlines (10, 13), and UTF-8 continuation bytes
+    if (byte < 9 || (byte > 13 && byte < 32) || (byte > 126 && byte < 194)) {
+      // Allow UTF-8 BOM
+      if (i < 3 && (byte === 0xef || byte === 0xbb || byte === 0xbf)) continue;
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Sanitize string input to prevent XSS and injection attacks
+ */
+function sanitizeString(input: string | null | undefined): string {
+  if (!input) return '';
+  return input
+    .replace(/[<>]/g, '') // Remove potential HTML tags
+    .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '') // Remove control characters
+    .trim()
+    .slice(0, 500); // Limit length
+}
 
 // Configure multer for memory storage with file size limit (5MB)
 const upload = multer({
@@ -62,6 +141,7 @@ function detectFileType(filename: string): ImportFileType {
 router.post(
   '/upload',
   authenticate,
+  importRateLimiter,
   upload.single('file'),
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -82,22 +162,42 @@ router.post(
 
       const fileType = detectFileType(req.file.originalname);
 
-      // Currently only CSV is supported
-      if (fileType !== ImportFileType.CSV) {
+      // Validate file content against magic number signature
+      if (!validateMagicNumber(req.file.buffer, fileType)) {
         const response: ApiResponse<null> = {
           data: null,
           error: {
             code: 'VALIDATION_ERROR',
-            message: 'Currently only CSV files are supported. XLSX, OFX support coming soon.',
+            message: 'File content does not match the expected format. Please ensure the file is not corrupted.',
           },
         };
         res.status(400).json(response);
         return;
       }
 
-      // Parse CSV content
-      const content = req.file.buffer.toString('utf-8');
-      const parseResult = parseCSV(content, { maxRows: 1000 });
+      // Parse file based on type
+      let parseResult: CSVParseResult;
+      let sheetNames: string[] | undefined;
+
+      if (fileType === ImportFileType.CSV) {
+        const content = req.file.buffer.toString('utf-8');
+        parseResult = parseCSV(content, { maxRows: 1000 });
+      } else if (fileType === ImportFileType.XLSX || fileType === ImportFileType.XLS) {
+        const xlsxResult = parseXLSX(req.file.buffer, { maxRows: 1000 });
+        parseResult = xlsxResult.result;
+        sheetNames = xlsxResult.sheetNames;
+      } else {
+        // OFX, QFX, QIF not yet supported
+        const response: ApiResponse<null> = {
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Currently only CSV and Excel files are supported. OFX/QIF support coming soon.',
+          },
+        };
+        res.status(400).json(response);
+        return;
+      }
 
       if (parseResult.errors.length > 0 && parseResult.rows.length === 0) {
         const response: ApiResponse<null> = {
@@ -140,6 +240,7 @@ router.post(
         preview: typeof parseResult.preview;
         suggestedMapping: typeof suggestedMapping;
         errors: typeof parseResult.errors;
+        sheetNames?: string[];
       }> = {
         data: {
           importId: importBatch.id,
@@ -151,6 +252,7 @@ router.post(
           preview: parseResult.preview,
           suggestedMapping,
           errors: parseResult.errors,
+          ...(sheetNames && { sheetNames }),
         },
         error: null,
       };
@@ -207,11 +309,7 @@ router.post(
         return;
       }
 
-      let content: string;
-
-      if (req.file) {
-        content = req.file.buffer.toString('utf-8');
-      } else {
+      if (!req.file) {
         // Get import batch and re-parse (in production, would retrieve cached data)
         const importBatch = await prisma.importBatch.findUnique({
           where: { id: importId, familyId },
@@ -241,8 +339,28 @@ router.post(
         return;
       }
 
-      // Parse and apply mapping
-      const parseResult = parseCSV(content);
+      // Parse file based on type
+      const fileType = detectFileType(req.file.originalname);
+      let parseResult: CSVParseResult;
+
+      if (fileType === ImportFileType.CSV) {
+        const content = req.file.buffer.toString('utf-8');
+        parseResult = parseCSV(content);
+      } else if (fileType === ImportFileType.XLSX || fileType === ImportFileType.XLS) {
+        const xlsxResult = parseXLSX(req.file.buffer);
+        parseResult = xlsxResult.result;
+      } else {
+        const response: ApiResponse<null> = {
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Unsupported file type for preview',
+          },
+        };
+        res.status(400).json(response);
+        return;
+      }
+
       const mappedRows = applyColumnMapping(parseResult, {
         ...mapping,
         dateFormat,
@@ -447,9 +565,28 @@ router.post(
         categoryId = importCategory.id;
       }
 
-      // Parse file
-      const content = req.file.buffer.toString('utf-8');
-      const parseResult = parseCSV(content);
+      // Parse file based on type
+      const fileType = detectFileType(req.file.originalname);
+      let parseResult: CSVParseResult;
+
+      if (fileType === ImportFileType.CSV) {
+        const content = req.file.buffer.toString('utf-8');
+        parseResult = parseCSV(content);
+      } else if (fileType === ImportFileType.XLSX || fileType === ImportFileType.XLS) {
+        const xlsxResult = parseXLSX(req.file.buffer);
+        parseResult = xlsxResult.result;
+      } else {
+        const response: ApiResponse<null> = {
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Unsupported file type',
+          },
+        };
+        res.status(400).json(response);
+        return;
+      }
+
       const mappedRows = applyColumnMapping(parseResult, {
         ...mapping,
         dateFormat,
@@ -474,7 +611,7 @@ router.post(
           familyId,
           userId,
           filename: req.file.originalname,
-          fileType: ImportFileType.CSV,
+          fileType,
           status: ImportStatus.PROCESSING,
           totalRows: mappedRows.length,
           columnMapping: mapping,
@@ -517,8 +654,8 @@ router.post(
           amount: new Decimal(Math.abs(parsedAmount).toFixed(2)),
           currency: account.currency,
           date: parsedDate,
-          payee: row.payee || 'Unknown',
-          notes: row.notes || '',
+          payee: sanitizeString(row.payee) || 'Unknown',
+          notes: sanitizeString(row.notes),
         });
 
         importedCount++;

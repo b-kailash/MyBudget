@@ -1,5 +1,5 @@
-import { prisma as prismaInstance1 } from '../apps/backend/src/lib/prisma';
-import { prisma as prismaInstance2 } from '../apps/backend/src/lib/prisma';
+import { prisma as prismaInstance1 } from '../../../apps/backend/src/lib/prisma';
+import { prisma as prismaInstance2 } from '../../../apps/backend/src/lib/prisma';
 import { PrismaClient } from '@prisma/client';
 
 const log = (level: 'info' | 'error' | 'warning', message: string, testScriptFile: string, data?: any) => {

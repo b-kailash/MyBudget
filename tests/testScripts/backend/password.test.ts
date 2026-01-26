@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { hashPassword, verifyPassword } from '../apps/backend/src/utils/password';
+import { hashPassword, verifyPassword } from '../../../apps/backend/src/utils/password';
 
 const log = (level: 'info' | 'error' | 'warning', message: string, testScriptFile: string, data?: any) => {
     const logObject: any = {

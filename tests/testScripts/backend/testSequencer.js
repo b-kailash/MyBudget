@@ -12,12 +12,15 @@ class RateLimitedSequencer extends Sequencer {
   getPriority(testPath) {
     const priorities = {
       'health.test.ts': 1,      // Basic connectivity check first
-      'auth.test.ts': 2,        // Authentication tests
-      'accounts.test.ts': 3,    // Account management
-      'categories.test.ts': 4,  // Category management
-      'transactions.test.ts': 5, // Transactions (depends on accounts/categories)
-      'budgets.test.ts': 6,     // Budgets
-      'family.test.ts': 7,      // Family management
+      'TS-001_Authentication.test.ts': 2,        // Authentication tests
+      'TS-002_Accounts.test.ts': 3,    // Account management
+      'TS-009_Categories.test.ts': 4,  // Category management
+      'TS-003_Transactions.test.ts': 5, // Transactions (depends on accounts/categories)
+      'TS-004_Budgets.test.ts': 6,     // Budgets
+      'TS-005_Family.test.ts': 7,      // Family management
+      'TS-006_Import.test.ts': 8,      // Import tests
+      'TS-007_Reports.test.ts': 9,     // Reports
+      'TS-008_Security.test.ts': 10,    // Security
     };
 
     for (const [name, priority] of Object.entries(priorities)) {

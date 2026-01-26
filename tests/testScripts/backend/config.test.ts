@@ -1,4 +1,4 @@
-import { config, validateConfig } from '../apps/backend/src/config';
+import { config, validateConfig } from '../../../apps/backend/src/config';
 
 jest.mock('dotenv', () => ({
   config: jest.fn(),
@@ -50,7 +50,7 @@ describe('Application Configuration', () => {
     process.env.JWT_SECRET = 'a_very_long_and_secure_jwt_secret_string';
     process.env.CORS_ORIGIN = 'http://localhost:3000';
 
-    const { config, validateConfig } = require('../apps/backend/src/config');
+    const { config, validateConfig } = require('../../../apps/backend/src/config');
 
     expect(config.server.env).toBe('development');
     expect(config.server.port).toBe(3001);
@@ -66,7 +66,7 @@ describe('Application Configuration', () => {
     process.env.NODE_ENV = 'production';
     delete process.env.DATABASE_URL; // Simulate missing variable
     
-    const requireConfig = () => require('../apps/backend/src/config');
+    const requireConfig = () => require('../../../apps/backend/src/config');
     expect(requireConfig).toThrow('Missing required environment variable: DATABASE_URL');
     log('info', 'Pass: Correctly threw an error for missing DATABASE_URL.', 'config.test.ts');
   });

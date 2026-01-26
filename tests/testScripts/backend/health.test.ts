@@ -5,7 +5,7 @@ import {
   extractErrorDetails,
   delay,
   RATE_LIMIT_DELAY_MS,
-} from './utils/testUtils';
+} from '../../utils/testUtils';
 
 const TEST_FILE = 'health.test.ts';
 const HEALTH_URL = `${BASE_URL}/health`;

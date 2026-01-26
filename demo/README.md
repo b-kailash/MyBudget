@@ -1,99 +1,104 @@
 # MyBudget Demo Data
 
-This directory contains demo data and seed scripts for testing and demonstration purposes.
+Sample data for testing and demonstration purposes.
 
-## Demo Data Overview
+## Quick Start
 
-The seed script creates a complete demo environment with:
+```bash
+# From project root (database must be running)
+npm run seed:demo
+```
 
-### Family
-- **Name:** The Smith Family
+## Demo Credentials
 
-### Members (4 total)
-| Name | Email | Role | Password |
-|------|-------|------|----------|
-| John Smith | john@demo.mybudget.app | Family Admin | Demo123! |
-| Jane Smith | jane@demo.mybudget.app | Member | Demo123! |
-| Tom Smith | tom@demo.mybudget.app | Member | Demo123! |
-| Emma Smith | emma@demo.mybudget.app | Viewer | Demo123! |
+| Name | Email | Password | Role |
+|------|-------|----------|------|
+| John Smith | john@demo.mybudget.app | Demo123! | Family Admin |
+| Jane Smith | jane@demo.mybudget.app | Demo123! | Member |
+| Tom Smith | tom@demo.mybudget.app | Demo123! | Member |
+| Emma Smith | emma@demo.mybudget.app | Demo123! | Viewer |
 
-### Bank Accounts (3 total)
-| Account Name | Type | Opening Balance | Currency |
-|--------------|------|-----------------|----------|
-| AIB Current Account | Bank | €2,500.00 | EUR |
-| Bank of Ireland Savings | Savings | €15,000.00 | EUR |
-| Revolut Card | Card | €500.00 | EUR |
+**Family:** The Smith Family
+
+## What's Included
+
+### Bank Accounts
+
+| Account | Type | Opening Balance | Currency |
+|---------|------|-----------------|----------|
+| AIB Current Account | Bank | 2,500.00 | EUR |
+| Bank of Ireland Savings | Savings | 15,000.00 | EUR |
+| Revolut Card | Card | 500.00 | EUR |
 
 ### Transactions
-- **Total:** 300+ transactions across all accounts
-- **Date Range:** Last 12 months
+
+- **Total:** 300+ transactions
+- **Period:** Last 12 months
 - **Distribution:**
-  - AIB Current: ~110 transactions (balanced income/expenses)
-  - BOI Savings: ~105 transactions (mostly deposits)
-  - Revolut Card: ~105 transactions (mostly expenses)
+  - AIB Current: ~110 transactions (mixed income/expenses)
+  - BOI Savings: ~105 transactions (deposits/transfers)
+  - Revolut Card: ~105 transactions (daily expenses)
 
 ### Categories
-**Expense Categories:**
-- Groceries, Dining Out, Transport, Utilities
-- Shopping, Entertainment, Healthcare, Subscriptions
-- Education, Gifts, Personal Care, Home
-- Insurance, Miscellaneous
 
-**Income Categories:**
-- Salary, Freelance, Investments, Other Income
+**Expenses:**
+Groceries, Dining Out, Transport, Utilities, Shopping, Entertainment, Healthcare, Subscriptions, Education, Gifts, Personal Care, Home, Insurance, Miscellaneous
 
-**Transfer Category:**
-- Transfer (for inter-account transfers)
+**Income:**
+Salary, Freelance, Investments, Other Income
+
+**Transfer:**
+Transfer (inter-account)
 
 ### Budgets
+
 Monthly budgets for current month:
-- Groceries: €600
-- Dining Out: €200
-- Transport: €150
-- Utilities: €300
-- Shopping: €250
-- Entertainment: €100
-- Healthcare: €100
-- Subscriptions: €80
+
+| Category | Budget |
+|----------|--------|
+| Groceries | 600 |
+| Dining Out | 200 |
+| Transport | 150 |
+| Utilities | 300 |
+| Shopping | 250 |
+| Entertainment | 100 |
+| Healthcare | 100 |
+| Subscriptions | 80 |
 
 ## Running the Seed Script
 
 ### Prerequisites
-1. PostgreSQL database running
-2. Backend dependencies installed
-3. Prisma client generated
 
-### Option 1: From project root
+1. PostgreSQL running (`docker compose -f docker-compose.dev.yml up -d`)
+2. Migrations applied (`cd apps/backend && npx prisma migrate dev`)
+
+### Methods
+
+**From project root (recommended):**
 ```bash
-# Ensure database is running
-docker-compose -f docker-compose.dev.yml up -d
-
-# Run migrations (if not already done)
-npm run migrate --workspace=apps/backend
-
-# Run demo seed
 npm run seed:demo
 ```
 
-### Option 2: From backend directory
+**From backend directory:**
 ```bash
 cd apps/backend
 npx ts-node ../../demo/seed.ts
 ```
 
-### Option 3: Direct execution
+**Direct execution:**
 ```bash
-# From project root
 npx ts-node --esm demo/seed.ts
 ```
 
 ## Resetting Demo Data
 
-The seed script automatically cleans existing demo data before creating new data. Simply run the seed script again to reset.
+The seed script is idempotent - running it again will:
+1. Delete existing demo data (The Smith Family)
+2. Create fresh demo data
 
-To manually clean demo data without re-seeding:
-```bash
-# Connect to database and run:
+**To manually delete without re-seeding:**
+```sql
+-- Connect to database
 DELETE FROM transactions WHERE family_id IN (SELECT id FROM families WHERE name = 'The Smith Family');
 DELETE FROM budgets WHERE family_id IN (SELECT id FROM families WHERE name = 'The Smith Family');
 DELETE FROM accounts WHERE family_id IN (SELECT id FROM families WHERE name = 'The Smith Family');
@@ -104,23 +109,19 @@ DELETE FROM families WHERE name = 'The Smith Family';
 
 ## Transaction Payees
 
-The demo data uses realistic Irish business names:
+Realistic Irish business names are used:
 
-**Groceries:** Tesco, Lidl, Aldi, SuperValu, Dunnes Stores, Centra, Spar
-
-**Dining:** McDonalds, Subway, Nandos, Starbucks, Costa Coffee, The Local Pub
-
-**Transport:** Dublin Bus, Luas, Irish Rail, Circle K, Uber, Bolt
-
-**Utilities:** Electric Ireland, Bord Gais, Eir, Virgin Media, Three Mobile
-
-**Shopping:** Penneys, H&M, Zara, TK Maxx, Currys, Harvey Norman
-
-**Entertainment:** Netflix, Spotify, Disney+, Amazon Prime, Odeon Cinema
+| Category | Examples |
+|----------|----------|
+| Groceries | Tesco, Lidl, Aldi, SuperValu, Dunnes, Centra, Spar |
+| Dining | McDonalds, Subway, Nandos, Starbucks, Costa |
+| Transport | Dublin Bus, Luas, Irish Rail, Circle K, Uber |
+| Utilities | Electric Ireland, Bord Gais, Eir, Virgin Media |
+| Shopping | Penneys, H&M, Zara, TK Maxx, Currys |
+| Entertainment | Netflix, Spotify, Disney+, Amazon Prime |
 
 ## Notes
 
-- All demo passwords meet the application's password policy (8+ chars, uppercase, lowercase, number)
-- Transactions are distributed realistically across the 12-month period
-- Monthly salaries appear on the 28th of each month
-- The seed script is idempotent - running it multiple times will reset the demo data
+- All passwords meet policy: 8+ chars, uppercase, lowercase, number
+- Salaries appear on the 28th of each month
+- Transactions are realistically distributed over 12 months

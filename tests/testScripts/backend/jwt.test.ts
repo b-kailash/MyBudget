@@ -4,7 +4,7 @@ import {
   verifyAccessToken,
   generateRefreshToken,
   hashRefreshToken,
-} from '../apps/backend/src/utils/jwt';
+} from '../../../apps/backend/src/utils/jwt';
 import * as dotenv from 'dotenv';
 
 dotenv.config({ path: './.env' });

@@ -6,7 +6,7 @@ import {
   extractErrorDetails,
   delay,
   RATE_LIMIT_DELAY_MS,
-} from './utils/testUtils';
+} from '../../utils/testUtils';
 
 const TEST_FILE = 'auth.test.ts';
 const testUser = createTestUser('auth');

@@ -7,7 +7,7 @@ import {
   extractErrorDetails,
   delay,
   RATE_LIMIT_DELAY_MS,
-} from './utils/testUtils';
+} from '../../utils/testUtils';
 
 const TEST_FILE = 'categories.test.ts';
 const CATEGORIES_URL = `${API_URL}/categories`;

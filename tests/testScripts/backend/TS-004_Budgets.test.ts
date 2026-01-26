@@ -7,27 +7,27 @@ import {
   extractErrorDetails,
   delay,
   RATE_LIMIT_DELAY_MS,
-} from './utils/testUtils';
+} from '../../utils/testUtils';
 
-const TEST_FILE = 'transactions.test.ts';
+const TEST_FILE = 'budgets.test.ts';
 const CATEGORIES_URL = `${API_URL}/categories`;
 const ACCOUNTS_URL = `${API_URL}/accounts`;
-const TRANSACTIONS_URL = `${API_URL}/transactions`;
+const BUDGETS_URL = `${API_URL}/budgets`;
 
 // User for this test suite
-const testUser = createTestUser('transaction');
+const testUser = createTestUser('budget');
 
 let accessToken: string;
 let categoryId: string;
 let accountId: string;
-let transactionId: string;
+let budgetId: string;
 
 // --- Test Suite ---
 
-describe('Transactions API', () => {
-  // 1. Set up a user, a category, and an account before starting
+describe('Budgets API', () => {
+  // 1. Set up a user, a category, and an account before starting the tests
   beforeAll(async () => {
-    log('info', '--- PRE-TEST: Setting up user, category, and account for transactions ---', TEST_FILE);
+    log('info', '--- PRE-TEST: Setting up user, category, and account ---', TEST_FILE);
     try {
       // Register and login user
       await axios.post(`${AUTH_URL}/register`, testUser);
@@ -38,21 +38,21 @@ describe('Transactions API', () => {
       accessToken = loginResponse.data.data.accessToken;
       log('info', 'User authenticated.', TEST_FILE);
 
-      // Create a category for the transaction
-      const categoryPayload = { name: 'Salary', type: 'INCOME' };
+      // Create a category
+      const categoryPayload = { name: 'Transport', type: 'EXPENSE' };
       const categoryResponse = await axios.post(CATEGORIES_URL, categoryPayload, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       categoryId = categoryResponse.data.data.id;
-      log('info', 'Category "Salary" created.', TEST_FILE);
+      log('info', 'Category created.', TEST_FILE);
 
-      // Create an account for the transaction
-      const accountPayload = { name: 'Current Account', type: 'BANK', currency: 'USD', openingBalance: 1000 };
+      // Create an account
+      const accountPayload = { name: 'Main Bank', type: 'BANK', currency: 'USD', openingBalance: 5000 };
       const accountResponse = await axios.post(ACCOUNTS_URL, accountPayload, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       accountId = accountResponse.data.data.id;
-      log('info', 'Account "Current Account" created.', TEST_FILE);
+      log('info', 'Account created.', TEST_FILE);
 
     } catch (error: unknown) {
       const details = extractErrorDetails(error);
@@ -66,37 +66,33 @@ describe('Transactions API', () => {
     }
   });
 
-  // 2. Create a new transaction
-  test('POST /transactions - should create a new transaction', async () => {
-    const transactionPayload = {
-      accountId: accountId,
+  // 2. Create a new budget for the category
+  test('POST /budgets - should create a new budget for a category', async () => {
+    const budgetPayload = {
       categoryId: categoryId,
-      type: 'INCOME',
-      amount: 5000,
-      currency: 'USD',
-      date: new Date().toISOString(),
-      payee: 'My Employer',
-      notes: 'Monthly salary',
+      amount: 500,
+      periodType: 'MONTHLY',
+      startDate: new Date().toISOString(),
     };
-    log('info', '--- Starting Test: POST /transactions ---', TEST_FILE, {
+    log('info', '--- Starting Test: POST /budgets ---', TEST_FILE, {
       inputParameters: {
-        endpoint: TRANSACTIONS_URL,
-        transaction: transactionPayload,
+        endpoint: BUDGETS_URL,
+        budget: budgetPayload,
       },
     });
     try {
-      const response = await axios.post(TRANSACTIONS_URL, transactionPayload, {
+      const response = await axios.post(BUDGETS_URL, budgetPayload, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
       expect(response.status).toBe(201);
-      expect(response.data.data.payee).toBe(transactionPayload.payee);
-      expect(response.data.data.amount).toBe(transactionPayload.amount);
-      transactionId = response.data.data.id;
-      log('info', 'Pass: Transaction created successfully.', TEST_FILE);
+      expect(response.data.data.amount).toBe(budgetPayload.amount);
+      expect(response.data.data.categoryId).toBe(categoryId);
+      budgetId = response.data.data.id;
+      log('info', 'Pass: Budget created successfully.', TEST_FILE);
     } catch (error: unknown) {
       const details = extractErrorDetails(error);
-      log('error', 'Fail: Failed to create transaction.', TEST_FILE, {
+      log('error', 'Fail: Failed to create budget.', TEST_FILE, {
         data: {
           errorMessage: details.message,
           statusCode: details.statusCode,
@@ -106,26 +102,26 @@ describe('Transactions API', () => {
     }
   });
 
-  // 3. List transactions
-  test('GET /transactions - should list transactions', async () => {
-    log('info', '--- Starting Test: GET /transactions ---', TEST_FILE, {
+  // 3. List all budgets
+  test('GET /budgets - should list all budgets', async () => {
+    log('info', '--- Starting Test: GET /budgets ---', TEST_FILE, {
       inputParameters: {
-        endpoint: TRANSACTIONS_URL,
+        endpoint: BUDGETS_URL,
       },
     });
     try {
-      const response = await axios.get(TRANSACTIONS_URL, {
+      const response = await axios.get(BUDGETS_URL, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.data.data)).toBe(true);
-      log('info', 'Pass: Transactions listed successfully.', TEST_FILE, {
+      log('info', 'Pass: Budgets listed successfully.', TEST_FILE, {
         data: { count: response.data.data.length },
       });
     } catch (error: unknown) {
       const details = extractErrorDetails(error);
-      log('error', 'Fail: Failed to list transactions.', TEST_FILE, {
+      log('error', 'Fail: Failed to list budgets.', TEST_FILE, {
         data: {
           errorMessage: details.message,
           statusCode: details.statusCode,
@@ -135,24 +131,24 @@ describe('Transactions API', () => {
     }
   });
 
-  // 4. Get single transaction
-  test('GET /transactions/:id - should get a specific transaction', async () => {
-    log('info', '--- Starting Test: GET /transactions/:id ---', TEST_FILE, {
+  // 4. Get single budget
+  test('GET /budgets/:id - should get a specific budget', async () => {
+    log('info', '--- Starting Test: GET /budgets/:id ---', TEST_FILE, {
       inputParameters: {
-        endpoint: `${TRANSACTIONS_URL}/${transactionId}`,
+        endpoint: `${BUDGETS_URL}/${budgetId}`,
       },
     });
     try {
-      const response = await axios.get(`${TRANSACTIONS_URL}/${transactionId}`, {
+      const response = await axios.get(`${BUDGETS_URL}/${budgetId}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
       expect(response.status).toBe(200);
-      expect(response.data.data.id).toBe(transactionId);
-      log('info', 'Pass: Transaction retrieved successfully.', TEST_FILE);
+      expect(response.data.data.id).toBe(budgetId);
+      log('info', 'Pass: Budget retrieved successfully.', TEST_FILE);
     } catch (error: unknown) {
       const details = extractErrorDetails(error);
-      log('error', 'Fail: Failed to get transaction.', TEST_FILE, {
+      log('error', 'Fail: Failed to get budget.', TEST_FILE, {
         data: {
           errorMessage: details.message,
           statusCode: details.statusCode,

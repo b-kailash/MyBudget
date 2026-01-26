@@ -1,14 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import { authenticate, requireRole } from '../apps/backend/src/middleware/auth';
-import { corsMiddleware } from '../apps/backend/src/middleware/cors';
-import { errorHandler, ApiError, asyncHandler } from '../apps/backend/src/middleware/errorHandler';
-import { notFoundHandler } from '../apps/backend/src/middleware/notFound';
+import { authenticate, requireRole } from '../../../apps/backend/src/middleware/auth';
+import { corsMiddleware } from '../../../apps/backend/src/middleware/cors';
+import { errorHandler, ApiError, asyncHandler } from '../../../apps/backend/src/middleware/errorHandler';
+import { notFoundHandler } from '../../../apps/backend/src/middleware/notFound';
 import rateLimit, { MemoryStore } from 'express-rate-limit';
-import { requestLogger } from '../apps/backend/src/middleware/requestLogger';
-import { validate } from '../apps/backend/src/middleware/validate';
+import { requestLogger } from '../../../apps/backend/src/middleware/requestLogger';
+import { validate } from '../../../apps/backend/src/middleware/validate';
 import { z } from 'zod';
 import { UserRole } from '../packages/shared/src/types';
-import { config } from '../apps/backend/src/config';
+import { config } from '../../../apps/backend/src/config';
 import morgan from 'morgan';
 
 // --- MOCKS ---
@@ -33,11 +33,11 @@ const mockResponse = (): Partial<Response> => {
 
 const mockNext = jest.fn();
 
-jest.mock('../apps/backend/src/utils/jwt', () => ({
-    ...jest.requireActual('../apps/backend/src/utils/jwt'),
+jest.mock('../../../apps/backend/src/utils/jwt', () => ({
+    ...jest.requireActual('../../../apps/backend/src/utils/jwt'),
     verifyAccessToken: jest.fn(),
 }));
-const mockedVerifyAccessToken = jest.requireMock('../apps/backend/src/utils/jwt').verifyAccessToken;
+const mockedVerifyAccessToken = jest.requireMock('../../../apps/backend/src/utils/jwt').verifyAccessToken;
 
 jest.mock('morgan', () => jest.fn(() => (req: any, res: any, next: any) => next()));
 const mockedMorgan = morgan as jest.Mock;
@@ -226,7 +226,7 @@ describe('Middleware Tests', () => {
             });
             process.env.NODE_ENV = 'development';
         
-            const { requestLogger: devLogger } = require('../apps/backend/src/middleware/requestLogger');
+            const { requestLogger: devLogger } = require('../../../apps/backend/src/middleware/requestLogger');
         
             const lastCall = mockedMorgan.mock.calls[mockedMorgan.mock.calls.length - 1];
             expect(lastCall[0]).toBe('dev');

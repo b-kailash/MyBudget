@@ -69,3 +69,30 @@ export const passwordResetRateLimiter = rateLimit({
   legacyHeaders: false,
   // Use default keyGenerator which properly handles IPv6
 });
+
+/**
+ * Rate limiter for file import uploads
+ * Strict limit: 10 uploads per hour per user
+ * Prevents abuse of file processing resources
+ */
+export const importRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 10, // 10 requests per window
+  message: {
+    data: null,
+    error: {
+      code: 'RATE_LIMIT_EXCEEDED',
+      message: 'Too many import requests. Please try again later (max 10 per hour).',
+    },
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    // Use user ID for authenticated import requests
+    const user = (req as { user?: { userId: string } }).user;
+    if (user?.userId) {
+      return `import:${user.userId}`;
+    }
+    return 'import:unauthenticated';
+  },
+});
