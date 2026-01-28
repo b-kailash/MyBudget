@@ -119,6 +119,7 @@ model Account {
   updatedAt      DateTime    @updatedAt @map("updated_at")
   isDeleted      Boolean     @default(false) @map("is_deleted")
   deletedAt      DateTime?   @map("deleted_at")
+  version        Int         @default(1)
 
   // Relations
   family               Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
@@ -142,6 +143,7 @@ model Category {
   updatedAt DateTime     @updatedAt @map("updated_at")
   isDeleted Boolean      @default(false) @map("is_deleted")
   deletedAt DateTime?    @map("deleted_at")
+  version   Int          @default(1)
 
   // Relations
   family       Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
@@ -171,6 +173,7 @@ model Transaction {
   updatedAt         DateTime        @updatedAt @map("updated_at")
   isDeleted         Boolean         @default(false) @map("is_deleted")
   deletedAt         DateTime?       @map("deleted_at")
+  version           Int             @default(1)
 
   // Relations
   family          Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
@@ -197,6 +200,9 @@ model Budget {
   endDate    DateTime         @map("end_date")
   createdAt  DateTime         @default(now()) @map("created_at")
   updatedAt  DateTime         @updatedAt @map("updated_at")
+  version    Int              @default(1)
+  isDeleted  Boolean          @default(false) @map("is_deleted")
+  deletedAt  DateTime?        @map("deleted_at")
 
   // Relations
   family   Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)

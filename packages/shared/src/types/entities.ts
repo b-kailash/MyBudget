@@ -73,6 +73,8 @@ export interface Account {
   isDeleted: boolean;
   /** Deletion timestamp */
   deletedAt: Date | null;
+  /** Optimistic locking version */
+  version: number;
 }
 
 /**
@@ -101,6 +103,8 @@ export interface Category {
   isDeleted: boolean;
   /** Deletion timestamp */
   deletedAt: Date | null;
+  /** Optimistic locking version */
+  version: number;
 }
 
 /**
@@ -139,6 +143,8 @@ export interface Transaction {
   isDeleted: boolean;
   /** Deletion timestamp */
   deletedAt: Date | null;
+  /** Optimistic locking version */
+  version: number;
 }
 
 /**
@@ -165,6 +171,12 @@ export interface Budget {
   createdAt: Date;
   /** Last update timestamp */
   updatedAt: Date;
+  /** Optimistic locking version */
+  version: number;
+  /** Soft delete flag */
+  isDeleted: boolean;
+  /** Deletion timestamp */
+  deletedAt: Date | null;
 }
 
 /**

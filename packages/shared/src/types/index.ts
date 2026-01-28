@@ -10,3 +10,6 @@ export * from './entities';
 
 // Re-export API types
 export * from './api';
+
+// Re-export sync types
+export * from './sync';
