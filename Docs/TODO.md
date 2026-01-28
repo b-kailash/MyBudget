@@ -12,7 +12,7 @@ Track progress by marking items with `[x]` when complete.
 2. Read `Docs/SPEC.md` for full specification
 3. Check git status: `git status && git log --oneline -5`
 4. **Recommended Next Tasks (Priority Order):**
-   - **Phase 5** - Offline & Sync (Mobile)
+   - **Phase 5B/5C** - Mobile SQLite & Sync Service
    - **Phase 6** - Recurring Transactions & Alerts
    - **Phase 7** - Docker & Local Orchestration
 
@@ -33,7 +33,7 @@ npm run dev --workspace=apps/backend
 - Backend API: http://192.168.1.235:3000
 - Frontend: http://192.168.1.235:5173
 
-**Last completed phase:** Phase 4 - Mobile App (React Native) - Online Only
+**Last completed phase:** Phase 5A - Backend Sync Endpoint
 
 ---
 
@@ -304,17 +304,18 @@ npm run dev --workspace=apps/backend
 
 ## Phase 5 – Offline & Sync (Mobile)
 
-### Phase 5A – Backend Sync Endpoint
+### Phase 5A – Backend Sync Endpoint ✅
 
 > **Security Note:** Changed from "last write wins" to proper conflict detection per gap analysis.
 
-- [ ] 78. Implement `/api/v1/sync` endpoint:
+- [x] 78. Implement `/api/v1/sync` endpoint:
   - Accepts batched changes (creates, updates, deletes) with timestamps and version
   - Detects conflicts by comparing version/updated_at
-  - Returns `409 Conflict` with current server state for stale updates
+  - Returns 200 OK with conflicts in response body (partial success model)
   - Returns authoritative versions of changed records
   - Returns all records updated since client's last sync timestamp
-- [ ] 78a. Add `version` field to syncable entities for optimistic locking.
+- [x] 78a. Add `version` field to syncable entities for optimistic locking.
+- [x] 78b. Update all CRUD routes to increment version on update/delete.
 
 ### Phase 5B – Mobile SQLite & Repository Layer
 
