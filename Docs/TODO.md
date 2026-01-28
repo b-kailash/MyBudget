@@ -12,9 +12,9 @@ Track progress by marking items with `[x]` when complete.
 2. Read `Docs/SPEC.md` for full specification
 3. Check git status: `git status && git log --oneline -5`
 4. **Recommended Next Tasks (Priority Order):**
-   - **Phase 4** - Mobile App (React Native)
    - **Phase 5** - Offline & Sync (Mobile)
    - **Phase 6** - Recurring Transactions & Alerts
+   - **Phase 7** - Docker & Local Orchestration
 
 **Before running the backend:**
 
@@ -33,7 +33,7 @@ npm run dev --workspace=apps/backend
 - Backend API: http://192.168.1.235:3000
 - Frontend: http://192.168.1.235:5173
 
-**Last completed phase:** Phase 3A - Transaction Import (CSV, XLSX support with security hardening)
+**Last completed phase:** Phase 4 - Mobile App (React Native) - Online Only
 
 ---
 
@@ -286,19 +286,19 @@ npm run dev --workspace=apps/backend
 
 ---
 
-## Phase 4 – Mobile App (React Native) – Online Only
+## Phase 4 – Mobile App (React Native) – Online Only ✅
 
-- [ ] 67. Initialize `/apps/mobile` with Expo + TypeScript.
-- [ ] 68. Configure React Navigation (auth stack + main tab navigator).
-- [ ] 69. Set up React Query and shared API client.
-- [ ] 70. Implement login screen.
-- [ ] 71. Implement register screen.
-- [ ] 72. Implement home/dashboard screen.
-- [ ] 73. Implement transactions list screen.
-- [ ] 74. Implement transaction add/edit screen.
-- [ ] 75. Implement accounts list screen.
-- [ ] 76. Implement categories selection screen.
-- [ ] 77. Implement basic settings screen.
+- [x] 67. Initialize `/apps/mobile` with Expo + TypeScript.
+- [x] 68. Configure React Navigation (auth stack + main tab navigator).
+- [x] 69. Set up React Query and shared API client.
+- [x] 70. Implement login screen.
+- [x] 71. Implement register screen.
+- [x] 72. Implement home/dashboard screen.
+- [x] 73. Implement transactions list screen.
+- [x] 74. Implement transaction add/edit screen.
+- [x] 75. Implement accounts list screen.
+- [x] 76. Implement categories selection screen.
+- [x] 77. Implement basic settings screen.
 
 ---
 
