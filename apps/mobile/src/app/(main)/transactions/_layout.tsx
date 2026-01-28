@@ -21,9 +21,16 @@ export default function TransactionsLayout() {
         }}
       />
       <Stack.Screen
+        name="new"
+        options={{
+          title: 'New Transaction',
+          presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
         name="[id]"
         options={{
-          title: 'Transaction',
+          title: 'Transaction Details',
         }}
       />
     </Stack>
