@@ -13,3 +13,6 @@ export * from './entities';
 
 // Re-export family schemas
 export * from './family';
+
+// Re-export sync schemas
+export * from './sync';

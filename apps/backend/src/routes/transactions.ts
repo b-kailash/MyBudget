@@ -509,10 +509,13 @@ router.put(
       const updateData: any = { ...req.body };
       if (date) updateData.date = new Date(date);
 
-      // Update transaction
+      // Update transaction with version increment
       const transaction = await prisma.transaction.update({
         where: { id },
-        data: updateData,
+        data: {
+          ...updateData,
+          version: { increment: 1 },
+        },
         include: {
           account: {
             select: {
@@ -616,12 +619,13 @@ router.delete(
         return;
       }
 
-      // Soft delete the transaction
+      // Soft delete the transaction with version increment
       const transaction = await prisma.transaction.update({
         where: { id },
         data: {
           isDeleted: true,
           deletedAt: new Date(),
+          version: { increment: 1 },
         },
       });
 

@@ -26,6 +26,7 @@ router.get(
 
       const whereClause: any = {
         familyId,
+        isDeleted: false,
       };
 
       if (categoryId && typeof categoryId === 'string') {
@@ -96,6 +97,7 @@ router.get(
         where: {
           id,
           familyId,
+          isDeleted: false,
         },
         include: {
           category: {
@@ -271,11 +273,12 @@ router.put(
       const familyId = req.user!.familyId;
       const { categoryId, accountId, startDate, endDate } = req.body;
 
-      // Check if budget exists and belongs to family
+      // Check if budget exists and belongs to family (excluding soft deleted)
       const existingBudget = await prisma.budget.findFirst({
         where: {
           id,
           familyId,
+          isDeleted: false,
         },
       });
 
@@ -342,10 +345,13 @@ router.put(
       if (startDate) updateData.startDate = new Date(startDate);
       if (endDate) updateData.endDate = new Date(endDate);
 
-      // Update budget
+      // Update budget with version increment
       const budget = await prisma.budget.update({
         where: { id },
-        data: updateData,
+        data: {
+          ...updateData,
+          version: { increment: 1 },
+        },
         include: {
           category: {
             select: {
@@ -387,7 +393,7 @@ router.put(
 
 /**
  * DELETE /api/v1/budgets/:id
- * Hard delete a budget (family_admin only)
+ * Soft delete a budget (family_admin only)
  */
 router.delete(
   '/:id',
@@ -398,11 +404,12 @@ router.delete(
       const { id } = req.params;
       const familyId = req.user!.familyId;
 
-      // Check if budget exists and belongs to family
+      // Check if budget exists and belongs to family (excluding soft deleted)
       const existingBudget = await prisma.budget.findFirst({
         where: {
           id,
           familyId,
+          isDeleted: false,
         },
       });
 
@@ -418,9 +425,14 @@ router.delete(
         return;
       }
 
-      // Hard delete the budget
-      const budget = await prisma.budget.delete({
+      // Soft delete the budget with version increment
+      const budget = await prisma.budget.update({
         where: { id },
+        data: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          version: { increment: 1 },
+        },
       });
 
       const response: ApiResponse<typeof budget> = {

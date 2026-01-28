@@ -273,10 +273,13 @@ router.put(
         }
       }
 
-      // Update category
+      // Update category with version increment
       const category = await prisma.category.update({
         where: { id },
-        data: req.body,
+        data: {
+          ...req.body,
+          version: { increment: 1 },
+        },
       });
 
       const response: ApiResponse<typeof category> = {
@@ -332,12 +335,13 @@ router.delete(
         return;
       }
 
-      // Soft delete the category
+      // Soft delete the category with version increment
       const category = await prisma.category.update({
         where: { id },
         data: {
           isDeleted: true,
           deletedAt: new Date(),
+          version: { increment: 1 },
         },
       });
 

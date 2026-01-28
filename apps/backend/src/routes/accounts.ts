@@ -181,10 +181,13 @@ router.put(
         return;
       }
 
-      // Update account
+      // Update account with version increment
       const account = await prisma.account.update({
         where: { id },
-        data: req.body,
+        data: {
+          ...req.body,
+          version: { increment: 1 },
+        },
       });
 
       const response: ApiResponse<typeof account> = {
@@ -240,12 +243,13 @@ router.delete(
         return;
       }
 
-      // Soft delete the account
+      // Soft delete the account with version increment
       const account = await prisma.account.update({
         where: { id },
         data: {
           isDeleted: true,
           deletedAt: new Date(),
+          version: { increment: 1 },
         },
       });
 

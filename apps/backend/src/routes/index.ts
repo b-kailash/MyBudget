@@ -7,6 +7,7 @@ import budgetsRouter from './budgets.js';
 import transactionsRouter from './transactions.js';
 import reportsRouter from './reports.js';
 import importRouter from './import.js';
+import syncRouter from './sync.js';
 import { apiRateLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
@@ -32,6 +33,7 @@ router.get('/', (_req, res) => {
       reports: '/api/v1/reports',
       dashboard: '/api/v1/dashboard',
       import: '/api/v1/import',
+      sync: '/api/v1/sync',
     },
     documentation: 'See /health for server status',
   });
@@ -51,6 +53,7 @@ router.use('/api/v1/transactions', apiRateLimiter, transactionsRouter);
 router.use('/api/v1/reports', apiRateLimiter, reportsRouter);
 router.use('/api/v1/dashboard', apiRateLimiter, reportsRouter);
 router.use('/api/v1/import', apiRateLimiter, importRouter);
+router.use('/api/v1/sync', apiRateLimiter, syncRouter);
 // router.use('/api/v1/users', apiRateLimiter, usersRouter);
 
 export default router;
